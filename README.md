@@ -23,3 +23,4 @@ bun install
 
 ## Thank you!
 
+This project was made with love by Arnau Rios and Alejandro Vidal (Yasai)

@@ -1,13 +1,16 @@
 import express from "express";
 import cors from "cors";
+import userRouter from "../routes/userRoutes";
 
 export class Server {
   private app: express.Application;
+  private apiPath: string = "/api";
 
   constructor() {
     this.app = express();
 
     this.middlewares();
+    this.routes();
   }
 
   // midlewares
@@ -18,7 +21,7 @@ export class Server {
   }
 
   private routes(): void {
-    // this.app.use("/api", routes);
+    this.app.use(this.apiPath + "/user", userRouter);
   }
 
   // listen function to start the server
@@ -27,7 +30,7 @@ export class Server {
       throw new Error("Invalid port number");
     }
     this.app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
+      console.log(`Server is running on port ${port}🚀`);
     });
   }
 }

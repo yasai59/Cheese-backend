@@ -7,6 +7,7 @@ interface IUserRepository {
   findByEmail(email: string): Promise<UserModel>;
   verify(user: UserModel): Promise<UserModel>;
   update(user: UserModel): Promise<UserModel>;
+  findByUsername(username: string): Promise<UserModel>;
 }
 
 export default class UserRepository implements IUserRepository {
@@ -19,6 +20,18 @@ export default class UserRepository implements IUserRepository {
       return user;
     } catch (error) {
       throw new Error("Error finding user by email");
+    }
+  }
+
+  public async findByUsername(username: string): Promise<UserModel> {
+    const query = "SELECT * FROM user WHERE username = ?";
+    try {
+      const result = await connection.promise().query(query, [username]);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const user = users[0] as UserModel;
+      return user;
+    } catch (error) {
+      throw new Error("Error finding user by username");
     }
   }
 

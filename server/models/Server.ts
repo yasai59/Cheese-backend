@@ -1,16 +1,27 @@
 import express from "express";
 import cors from "cors";
+import { Server as Socket } from "socket.io";
+import http from "http";
 import userRouter from "../routes/userRoutes";
 
 export class Server {
   private app: express.Application;
   private apiPath: string = "/api";
+  private io: Socket;
+  private httpServer: http.Server;
 
   constructor() {
+    // initialize express app
     this.app = express();
+    this.httpServer = http.createServer(this.app);
 
+    // call the midlewares and routes
     this.middlewares();
     this.routes();
+
+    // initialize socket.io
+    this.io = new Socket(this.httpServer);
+    this.sockets();
   }
 
   // midlewares
@@ -22,6 +33,15 @@ export class Server {
 
   private routes(): void {
     this.app.use(this.apiPath + "/user", userRouter);
+  }
+
+  private sockets(): void {
+    this.io.on("connection", (socket) => {
+      console.log("Client connected");
+      socket.on("disconnect", () => {
+        console.log("Client disconnected");
+      });
+    });
   }
 
   // listen function to start the server

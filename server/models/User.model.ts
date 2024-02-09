@@ -10,6 +10,6 @@ export default interface User extends RowDataPacket {
   creation_date?: Date;
   lot_number?: number;
   photo?: string;
-  goole?: 1 | 0;
+  google?: 1 | 0;
   verified?: 1 | 0;
 }

@@ -56,7 +56,7 @@ export default class UserRepository implements IUserRepository {
 
   public async update(user: UserModel): Promise<UserModel> {
     const query =
-      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, verified = ? WHERE id = ?";
+      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ? WHERE id = ?";
     try {
       await connection
         .promise()
@@ -65,7 +65,6 @@ export default class UserRepository implements IUserRepository {
           user.email,
           user.password,
           user.role_id,
-          user.verified,
           user.id,
         ]);
 

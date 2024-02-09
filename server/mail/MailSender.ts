@@ -18,7 +18,7 @@ class MailSender {
     email: string,
     subject: string,
     message: string,
-    from?: string | undefined
+    from?: string
   ): void {
     this.resend.emails.send({
       from: from ?? "Yasai <no-reply@yasai59.com>",
@@ -27,9 +27,6 @@ class MailSender {
       html: message,
     });
 
-    console.log(`Sending mail to ${email}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Message: ${message}`);
   }
 }
 

@@ -2,6 +2,7 @@ import express, { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
+
 import MailSender from "../mail/MailSender";
 import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";

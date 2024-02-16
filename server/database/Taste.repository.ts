@@ -4,6 +4,7 @@ import type { RowDataPacket } from "mysql2";
 
 interface ITasteRepository {
     findUserTastes(userId: number): Promise<TasteModel[]>;                
+    addTastesToUser(userId: number, tastes: number[]): Promise<TasteModel[]>;
 }
 
 export default class TasteRepository implements ITasteRepository {
@@ -18,7 +19,7 @@ export default class TasteRepository implements ITasteRepository {
         }
     }
 
-    public async addTastesToUser(userId: number, tastes: string[]): Promise<TasteModel[]> {
+    public async addTastesToUser(userId: number, tastes: number[]): Promise<TasteModel[]> {
         const query = "INSERT INTO user_taste (user_id, taste_id) VALUES (?, ?)";
         try {
             for (let i = 0; i < tastes.length; i++) {
@@ -29,5 +30,4 @@ export default class TasteRepository implements ITasteRepository {
             throw new Error("Error adding tastes to user");
         }
     }
-    
 }

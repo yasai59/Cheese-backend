@@ -25,10 +25,11 @@ tasteRouter.get("/", async (req: Request, res: Response) => {
     }
 })
 
-// POST /api/taste/:userId/tastes
+// POST /api/taste
 tasteRouter.post("/", async (req: Request, res: Response) => {
-    const userId = Number(req.params.userId);
+    const {userId} = req.body;
     const { tastes } = req.body;
+    console.log(userId, tastes);
     let userTastes: TasteModel[];
     try {
         userTastes = await tasteRepository.addTastesToUser(userId, tastes);
@@ -41,8 +42,6 @@ tasteRouter.post("/", async (req: Request, res: Response) => {
             message: "Error adding tastes to user",
         });
     }
-
-
 })
 
 export default tasteRouter;

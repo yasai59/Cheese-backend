@@ -72,7 +72,7 @@ userRouter.post("/", async (req: Request, res: Response) => {
     `
     <h1>Welcome to cheese</h1> 
     <br> 
-    <a href="http://localhost:3000/api/user/verify?code=${verificationCode}">Click here to verify your account</a>
+    <a href="https://apicheese.yasai59.com/api/user/verify?code=${verificationCode}">Click here to verify your account</a>
     `
   );
   // create the token

@@ -3,6 +3,7 @@ import cors from "cors";
 import { Server as Socket } from "socket.io";
 import http from "http";
 import userRouter from "../routes/userRoutes";
+import tasteRouter from "../routes/tasteRoutes";
 
 export class Server {
   private app: express.Application;
@@ -33,6 +34,7 @@ export class Server {
 
   private routes(): void {
     this.app.use(this.apiPath + "/user", userRouter);
+    this.app.use(this.apiPath + "/taste", tasteRouter);
   }
 
   private sockets(): void {

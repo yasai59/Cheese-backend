@@ -159,4 +159,25 @@ userRouter.post("/login", async (req: Request, res: Response) => {
   });
 });
 
+// PUT /api/user
+userRouter.put("/", async (req: Request, res: Response) => {
+  let user: UserModel = req.body;
+  user.role_id = user.role_id === 1 ? 1 : 2;
+  
+  try {
+    const userDb = await userRepository.update(user);
+    if(!userDb) throw new Error("Error updating the user");
+    return res.json({
+      message: "User updated successfully",
+      userDb,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating the user",
+    });
+  }
+
+})
+
+
 export default userRouter;

@@ -1,6 +1,7 @@
 import connection from "./connection";
 import type UserModel from "../models/User.model";
 import type { RowDataPacket } from "mysql2";
+import bcrypt from "bcrypt";
 
 interface IUserRepository {
   save(user: UserModel): Promise<UserModel>;
@@ -56,15 +57,16 @@ export default class UserRepository implements IUserRepository {
 
   public async update(user: UserModel): Promise<UserModel> {
     const query =
-      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ? WHERE id = ?";
+      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ? WHERE id = ?";
     try {
       await connection
         .promise()
         .query(query, [
           user.username,
           user.email,
-          user.password,
+          bcrypt.hashSync(user.password as string, 10),
           user.role_id,
+          user.lot_number,
           user.id,
         ]);
 
@@ -73,7 +75,7 @@ export default class UserRepository implements IUserRepository {
         .query("SELECT * FROM user WHERE id = ?", [user.id]);
 
       const users: RowDataPacket[] = result[0] as RowDataPacket[];
-      const dbUser = users[0] as UserModel;
+      const dbUser: UserModel = users[0] as UserModel;
       return dbUser;
     } catch (error) {
       throw new Error("Error updating user");

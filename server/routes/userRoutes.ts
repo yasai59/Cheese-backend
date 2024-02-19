@@ -260,6 +260,15 @@ userRouter.get("/reset-password", async (req: Request, res: Response) => {
 
   user.password = bcrypt.hashSync("1234", 10);
 
+  try {
+    await userRepository.update(user);
+    await userRepository.saveAction(user, null, null);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating the password",
+    });
+  }
+
   res.send(
     "<h1>Password reset successfully to 1234 (this is temporal, we'll make a proper form)</h1>"
   );

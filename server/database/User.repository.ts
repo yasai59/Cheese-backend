@@ -107,8 +107,8 @@ export default class UserRepository implements IUserRepository {
 
   public async saveAction(
     user: UserModel,
-    verificationCode: number,
-    action: string
+    verificationCode: number | null,
+    action: string | null
   ): Promise<UserModel> {
     const query =
       "UPDATE user SET action = ?, verification_code = ? WHERE id = ?";

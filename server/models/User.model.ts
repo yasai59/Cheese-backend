@@ -12,4 +12,6 @@ export default interface User extends RowDataPacket {
   photo?: string;
   google?: 1 | 0;
   verified?: 1 | 0;
+  verification_code?: number;
+  action?: string;
 }

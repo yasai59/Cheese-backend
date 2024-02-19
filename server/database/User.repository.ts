@@ -104,4 +104,28 @@ export default class UserRepository implements IUserRepository {
       throw new Error("Error saving user");
     }
   }
+
+  public async saveAction(
+    user: UserModel,
+    verificationCode: number | null,
+    action: string | null
+  ): Promise<UserModel> {
+    const query =
+      "UPDATE user SET action = ?, verification_code = ? WHERE id = ?";
+    try {
+      await connection
+        .promise()
+        .query(query, [action, verificationCode, user.id]);
+
+      const result = await connection
+        .promise()
+        .query("SELECT * FROM user WHERE id = ?", [user.id]);
+
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const dbUser = users[0] as UserModel;
+      return dbUser;
+    } catch (error) {
+      throw new Error("Error saving user action");
+    }
+  }
 }

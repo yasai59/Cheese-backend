@@ -163,10 +163,10 @@ userRouter.post("/login", async (req: Request, res: Response) => {
 userRouter.put("/", async (req: Request, res: Response) => {
   let user: UserModel = req.body;
   user.role_id = user.role_id === 1 ? 1 : 2;
-  
+
   try {
     const userDb = await userRepository.update(user);
-    if(!userDb) throw new Error("Error updating the user");
+    if (!userDb) throw new Error("Error updating the user");
     return res.json({
       message: "User updated successfully",
       userDb,
@@ -176,8 +176,102 @@ userRouter.put("/", async (req: Request, res: Response) => {
       message: "Error updating the user",
     });
   }
+});
 
-})
+// POST /api/user/forgot-password
+userRouter.post("/forgot-password", async (req: Request, res: Response) => {
+  const email: string = req.body.email;
+  if (!email) {
+    return res.status(400).json({
+      message: "the email is required",
+    });
+  }
 
+  let user: UserModel;
+  try {
+    user = await userRepository.findByEmail(email);
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error finding the user",
+    });
+  }
+
+  let verificationCode = Math.floor(Math.random() * 1000000);
+  // save the verification code
+  try {
+    await userRepository.saveAction(user, verificationCode, "RESET_PASSWORD");
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error saving the verification code",
+    });
+  }
+
+  // send the email
+  mailSender.sendMail(
+    user.email,
+    "Reset your password",
+    `
+    <h1>Reset your password</h1> 
+    <br> 
+    <a href="https://apicheese.yasai59.com/api/user/reset-password?code=${verificationCode}&email=${user.email}">Click here to reset your password</a>
+    `
+  );
+
+  res.json({
+    message: "Email sent successfully",
+  });
+});
+// TODO: change the reset password to a form
+// GET /api/user/reset-password
+userRouter.get("/reset-password", async (req: Request, res: Response) => {
+  const verificationCode = req.query.code as string;
+  const email = req.query.email as string;
+
+  if (!verificationCode) {
+    return res.status(400).json({
+      message: "the verification code is required",
+    });
+  }
+
+  let user: UserModel;
+  try {
+    user = await userRepository.findByEmail(email);
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error finding the user",
+    });
+  }
+
+  if (user.verification_code !== Number(verificationCode)) {
+    return res.status(400).json({
+      message: "Invalid verification code",
+    });
+  }
+
+  user.password = "1234";
+
+  try {
+    await userRepository.update(user);
+    await userRepository.saveAction(user, null, null);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating the password",
+    });
+  }
+
+  res.send(
+    "<h1>Password reset successfully to 1234 (this is temporal, we'll make a proper form)</h1>"
+  );
+});
 
 export default userRouter;

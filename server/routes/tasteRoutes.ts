@@ -29,7 +29,6 @@ tasteRouter.get("/", async (req: Request, res: Response) => {
 tasteRouter.post("/", async (req: Request, res: Response) => {
     const {userId} = req.body;
     const { tastes } = req.body;
-    console.log(userId, tastes);
     let userTastes: TasteModel[];
     try {
         userTastes = await tasteRepository.addTastesToUser(userId, tastes);

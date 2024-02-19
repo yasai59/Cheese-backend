@@ -4,6 +4,7 @@ import { Server as Socket } from "socket.io";
 import http from "http";
 import userRouter from "../routes/userRoutes";
 import tasteRouter from "../routes/tasteRoutes";
+import restrictionRouter from "../routes/restrictionRoutes";
 
 export class Server {
   private app: express.Application;
@@ -35,6 +36,7 @@ export class Server {
   private routes(): void {
     this.app.use(this.apiPath + "/user", userRouter);
     this.app.use(this.apiPath + "/taste", tasteRouter);
+    this.app.use(this.apiPath + "/restriction", restrictionRouter);
   }
 
   private sockets(): void {

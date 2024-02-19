@@ -3,7 +3,8 @@ import type RestrictionModel from "../models/Restriction.model";
 import type { RowDataPacket } from "mysql2";
 
 interface IRestrictionRepository {
-
+    findUserRestrictions(userId: number): Promise<RestrictionModel[]>;
+    addRestrictionsToUser(userId: number, restrictions: number[]): Promise<RestrictionModel[]>;
 }
 
 export default class RestrictionRepository implements IRestrictionRepository {

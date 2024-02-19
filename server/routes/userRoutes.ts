@@ -258,7 +258,7 @@ userRouter.get("/reset-password", async (req: Request, res: Response) => {
     });
   }
 
-  user.password = bcrypt.hashSync("1234", 10);
+  user.password = "1234";
 
   try {
     await userRepository.update(user);

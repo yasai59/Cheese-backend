@@ -218,7 +218,7 @@ userRouter.post("/forgot-password", async (req: Request, res: Response) => {
     `
     <h1>Reset your password</h1> 
     <br> 
-    <a href="https://apicheese.yasai59.com/api/user/reset-password?code=${verificationCode}?email=${user.email}">Click here to reset your password</a>
+    <a href="https://apicheese.yasai59.com/api/user/reset-password?code=${verificationCode}&email=${user.email}">Click here to reset your password</a>
     `
   );
 
@@ -232,7 +232,6 @@ userRouter.get("/reset-password", async (req: Request, res: Response) => {
   const verificationCode = req.query.code as string;
   const email = req.query.email as string;
 
-  console.log({ verificationCode, email });
   if (!verificationCode) {
     return res.status(400).json({
       message: "the verification code is required",

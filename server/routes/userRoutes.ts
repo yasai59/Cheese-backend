@@ -231,6 +231,8 @@ userRouter.post("/forgot-password", async (req: Request, res: Response) => {
 userRouter.get("/reset-password", async (req: Request, res: Response) => {
   const verificationCode = req.query.code as string;
   const email = req.query.email as string;
+
+  console.log({ verificationCode, email });
   if (!verificationCode) {
     return res.status(400).json({
       message: "the verification code is required",

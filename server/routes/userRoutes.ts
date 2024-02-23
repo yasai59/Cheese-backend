@@ -6,6 +6,7 @@ import type { Request, Response } from "express";
 import MailSender from "../mail/MailSender";
 import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";
+import { verifyJWT } from "../middlewares/verifyJWT";
 
 const userRepository = new UserRepository();
 
@@ -160,8 +161,11 @@ userRouter.post("/login", async (req: Request, res: Response) => {
 });
 
 // PUT /api/user
-userRouter.put("/", async (req: Request, res: Response) => {
+userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
+  const reqUser = req.user as UserModel;
   let user: UserModel = req.body;
+  user.id = reqUser.id;
+
   user.role_id = user.role_id === 1 ? 1 : 2;
 
   try {

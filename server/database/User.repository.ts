@@ -56,19 +56,32 @@ export default class UserRepository implements IUserRepository {
   }
 
   public async update(user: UserModel): Promise<UserModel> {
-    const query =
+    let query =
       "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ? WHERE id = ?";
+
+    if (!user.password) {
+      query =
+        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ? WHERE id = ?";
+    }
     try {
-      await connection
-        .promise()
-        .query(query, [
+      let campos = [
+        user.username,
+        user.email,
+        user.role_id,
+        user.lot_number,
+        user.id,
+      ];
+      if (user.password) {
+        campos = [
           user.username,
           user.email,
           bcrypt.hashSync(user.password as string, 10),
           user.role_id,
           user.lot_number,
           user.id,
-        ]);
+        ];
+      }
+      await connection.promise().query(query, campos);
 
       const result = await connection
         .promise()

@@ -9,6 +9,7 @@ interface IUserRepository {
   verify(user: UserModel): Promise<UserModel>;
   update(user: UserModel): Promise<UserModel>;
   findByUsername(username: string): Promise<UserModel>;
+  delete(id: number): Promise<void>;
 }
 
 export default class UserRepository implements IUserRepository {
@@ -139,6 +140,15 @@ export default class UserRepository implements IUserRepository {
       return dbUser;
     } catch (error) {
       throw new Error("Error saving user action");
+    }
+  }
+
+  public async delete(id: number): Promise<void> {
+    const query = "UPADTE user SET active = 0 WHERE id = ?";
+    try {
+      await connection.promise().query(query, [id]);
+    } catch (error) {
+      throw new Error("Error deleting user");
     }
   }
 }

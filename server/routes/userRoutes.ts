@@ -316,7 +316,7 @@ userRouter.post(
       if (!userDb) throw new Error("Error updating the user");
       return res.json({
         message: "Password updated successfully",
-        userDb,
+        user: userDb,
       });
     } catch (error) {
       return res.status(500).json({
@@ -326,4 +326,17 @@ userRouter.post(
   }
 );
 
+userRouter.delete("/", [verifyJWT], async (req: Request, res: Response) => {
+  const reqUser = req.user as UserModel;
+  try {
+    await userRepository.delete(reqUser.id as number);
+    return res.json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error deleting the user",
+    });
+  }
+});
 export default userRouter;

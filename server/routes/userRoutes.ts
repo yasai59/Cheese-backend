@@ -278,4 +278,52 @@ userRouter.get("/reset-password", async (req: Request, res: Response) => {
   );
 });
 
+userRouter.post(
+  "/change-password",
+  [verifyJWT],
+  async (req: Request, res: Response) => {
+    const reqUser = req.user as UserModel;
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        message: "the old password and the new password are required",
+      });
+    }
+    let user: UserModel;
+    try {
+      user = await userRepository.findByEmail(reqUser.email);
+      if (!user) {
+        return res.status(400).json({
+          message: "User not found",
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error finding the user",
+      });
+    }
+
+    if (!bcrypt.compareSync(oldPassword, user.password as string)) {
+      return res.status(400).json({
+        message: "Old password is invalid",
+      });
+    }
+
+    user.password = newPassword;
+
+    try {
+      const userDb = await userRepository.update(user);
+      if (!userDb) throw new Error("Error updating the user");
+      return res.json({
+        message: "Password updated successfully",
+        userDb,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error updating the password",
+      });
+    }
+  }
+);
+
 export default userRouter;

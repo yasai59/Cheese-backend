@@ -204,7 +204,7 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
     });
   }
 });
-
+// POST /api/user/photo -> change photo
 userRouter.post(
   "/photo",
   [verifyJWT, upload.single("photo")],
@@ -227,6 +227,11 @@ userRouter.post(
     }
   }
 );
+
+userRouter.get("/photo", [verifyJWT], async (req: Request, res: Response) => {
+  let user = req.user as UserModel;
+  res.sendFile(path.join(dir, `../../uploads/user_photos/${user.photo}`));
+});
 
 // POST /api/user/forgot-password
 userRouter.post("/forgot-password", async (req: Request, res: Response) => {

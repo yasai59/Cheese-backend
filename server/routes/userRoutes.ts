@@ -175,7 +175,12 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
       message: "User updated successfully",
       userDb,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === "duplicate entry") {
+      return res.status(400).json({
+        message: "duplicate entry for the email or the username",
+      });
+    }
     return res.status(500).json({
       message: "Error updating the user",
     });

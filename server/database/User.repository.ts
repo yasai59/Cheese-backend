@@ -92,6 +92,9 @@ export default class UserRepository implements IUserRepository {
       const dbUser: UserModel = users[0] as UserModel;
       return dbUser;
     } catch (error) {
+      if ((error as any)["errno"] === 1062) {
+        throw new Error("duplicate entry");
+      }
       throw new Error("Error updating user");
     }
   }

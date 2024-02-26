@@ -58,11 +58,11 @@ export default class UserRepository implements IUserRepository {
 
   public async update(user: UserModel): Promise<UserModel> {
     let query =
-      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ? WHERE id = ?";
+      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";
 
     if (!user.password) {
       query =
-        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ? WHERE id = ?";
+        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";
     }
     try {
       let campos = [
@@ -70,6 +70,7 @@ export default class UserRepository implements IUserRepository {
         user.email,
         user.role_id,
         user.lot_number,
+        user.photo,
         user.id,
       ];
       if (user.password) {
@@ -79,6 +80,7 @@ export default class UserRepository implements IUserRepository {
           bcrypt.hashSync(user.password as string, 10),
           user.role_id,
           user.lot_number,
+          user.photo,
           user.id,
         ];
       }

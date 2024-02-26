@@ -1,12 +1,30 @@
 import express, { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import multer from "multer";
+import path from "path";
 import type { Request, Response } from "express";
 
 import MailSender from "../mail/MailSender";
 import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
+
+const dir = import.meta.dir;
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(dir, "../../uploads/user_photos/"));
+  },
+  filename: function (req, file, cb) {
+    const user = req.user as UserModel;
+
+    const newFilename = `${user.id}.png`;
+    cb(null, newFilename);
+  },
+});
+
+const upload = multer({ storage });
 
 const userRepository = new UserRepository();
 
@@ -187,30 +205,28 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
   }
 });
 
-userRouter.post("/photo", [verifyJWT], async (req: Request, res: Response) => {
-  console.log("adsadasdasdasdas");
-  let user = req.user as UserModel;
-  if (!req.files) {
-    return res.status(400).json({
-      message: "the photo is required",
-    });
-  }
+userRouter.post(
+  "/photo",
+  [verifyJWT, upload.single("photo")],
+  async (req: Request, res: Response) => {
+    let user = req.user as UserModel;
+    delete user.password;
+    user.photo = `${user.id}.png`;
 
-  console.log(req.files);
-
-  try {
-    const userDb = await userRepository.update(user);
-    if (!userDb) throw new Error("Error updating the user");
-    return res.json({
-      message: "Photo updated successfully",
-      user: userDb,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Error updating the photo",
-    });
+    try {
+      const userDb = await userRepository.update(user);
+      if (!userDb) throw new Error("Error updating the user");
+      return res.json({
+        message: "Photo updated successfully",
+        user: userDb,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error updating the photo",
+      });
+    }
   }
-});
+);
 
 // POST /api/user/forgot-password
 userRouter.post("/forgot-password", async (req: Request, res: Response) => {

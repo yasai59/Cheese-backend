@@ -187,6 +187,31 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
   }
 });
 
+userRouter.post("/photo", [verifyJWT], async (req: Request, res: Response) => {
+  console.log("adsadasdasdasdas");
+  let user = req.user as UserModel;
+  if (!req.files) {
+    return res.status(400).json({
+      message: "the photo is required",
+    });
+  }
+
+  console.log(req.files);
+
+  try {
+    const userDb = await userRepository.update(user);
+    if (!userDb) throw new Error("Error updating the user");
+    return res.json({
+      message: "Photo updated successfully",
+      user: userDb,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating the photo",
+    });
+  }
+});
+
 // POST /api/user/forgot-password
 userRouter.post("/forgot-password", async (req: Request, res: Response) => {
   const email: string = req.body.email;

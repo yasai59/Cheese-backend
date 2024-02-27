@@ -22,10 +22,13 @@ const handleDisconnect = () => {
     console.log("db error", err);
     if (err.code === "PROTOCOL_CONNECTION_LOST") {
       handleDisconnect();
+      console.log("Connection lost, reconnecting... 👍");
     } else {
       throw err;
     }
   });
 };
+
+handleDisconnect();
 
 export default connection;

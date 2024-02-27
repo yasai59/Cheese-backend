@@ -14,7 +14,7 @@ interface IUserRepository {
 
 export default class UserRepository implements IUserRepository {
   public async findByEmail(email: string): Promise<UserModel> {
-    const query = "SELECT * FROM user WHERE email = ?";
+    const query = "SELECT * FROM user WHERE email = ? AND active = 1";
     try {
       const result = await connection.promise().query(query, [email]);
       const users: RowDataPacket[] = result[0] as RowDataPacket[];
@@ -26,7 +26,7 @@ export default class UserRepository implements IUserRepository {
   }
 
   public async findByUsername(username: string): Promise<UserModel> {
-    const query = "SELECT * FROM user WHERE username = ?";
+    const query = "SELECT * FROM user WHERE username = ? AND active = 1";
     try {
       const result = await connection.promise().query(query, [username]);
       const users: RowDataPacket[] = result[0] as RowDataPacket[];
@@ -38,7 +38,7 @@ export default class UserRepository implements IUserRepository {
   }
 
   public async verify(user: UserModel): Promise<UserModel> {
-    const query = "UPDATE user SET verified = 1 WHERE id = ?";
+    const query = "UPDATE user SET verified = 1 WHERE id = ? AND active = 1";
 
     try {
       await connection.promise().query(query, [user.id]);
@@ -130,7 +130,7 @@ export default class UserRepository implements IUserRepository {
     action: string | null
   ): Promise<UserModel> {
     const query =
-      "UPDATE user SET action = ?, verification_code = ? WHERE id = ?";
+      "UPDATE user SET action = ?, verification_code = ? WHERE id = ? AND active = 1";
     try {
       await connection
         .promise()
@@ -149,10 +149,11 @@ export default class UserRepository implements IUserRepository {
   }
 
   public async delete(id: number): Promise<void> {
-    const query = "UPADTE user SET active = 0 WHERE id = ?";
+    const query = "UPDATE user SET active = 0 WHERE id = ? AND active = 1";
     try {
       await connection.promise().query(query, [id]);
     } catch (error) {
+      console.log(error);
       throw new Error("Error deleting user");
     }
   }

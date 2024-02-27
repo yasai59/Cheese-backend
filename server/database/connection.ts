@@ -1,7 +1,7 @@
 import mysql from "mysql2";
 import dbConfig from "./db.config";
 
-let connection;
+let connection: mysql.Connection;
 
 const handleDisconnect = () => {
   connection = mysql.createConnection({

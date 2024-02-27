@@ -10,7 +10,7 @@ import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
 
-const dir = import.meta.dir;
+const dir = path.dirname(new URL(import.meta.url).pathname);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -230,6 +230,11 @@ userRouter.post(
 
 userRouter.get("/photo", [verifyJWT], async (req: Request, res: Response) => {
   let user = req.user as UserModel;
+  if (!user?.photo)
+    return res
+      .status(404)
+      .sendFile(path.join(dir, `../../uploads/user_photos/default.jpg `));
+
   res.sendFile(path.join(dir, `../../uploads/user_photos/${user.photo}`));
 });
 

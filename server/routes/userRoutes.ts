@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import type { Request, Response } from "express";
 
 import MailSender from "../mail/MailSender";
@@ -53,6 +54,15 @@ userRouter.get("/verify", async (req: Request, res: Response) => {
     return res.status(500).send("<h1>Error verifying the user</h1>");
   }
   res.send("<h1>User verified successfully</h1>");
+});
+// GET /api/user/myUser
+userRouter.get("/myUser", [verifyJWT], async (req: Request, res: Response) => {
+  const user = req.user as UserModel;
+  delete user.password;
+  res.json({
+    message: "User found",
+    user,
+  });
 });
 
 // POST /api/user
@@ -230,11 +240,20 @@ userRouter.post(
 
 userRouter.get("/photo", [verifyJWT], async (req: Request, res: Response) => {
   let user = req.user as UserModel;
-  if (!user?.photo)
-    return res
-      .status(404)
-      .sendFile(path.join(dir, `../../uploads/user_photos/default.jpg `));
-
+  if (!user || !user.photo) {
+    console.log("it's been so long");
+    return res.sendFile(
+      path.join(dir, `../../uploads/user_photos/default.jpg`)
+    );
+  }
+  // look if image exists
+  if (
+    !fs.existsSync(path.join(dir, `../../uploads/user_photos/${user.photo}`))
+  ) {
+    return res.sendFile(
+      path.join(dir, `../../uploads/user_photos/default.jpg`)
+    );
+  }
   res.sendFile(path.join(dir, `../../uploads/user_photos/${user.photo}`));
 });
 

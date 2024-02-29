@@ -26,6 +26,22 @@ tasteRouter.get("/", [verifyJWT], async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/taste/all
+tasteRouter.get("/all", [verifyJWT], async (req: Request, res: Response) => {
+  let tastes: TasteModel[];
+  try {
+    tastes = await tasteRepository.findAll();
+    return res.json({
+      message: "All tastes found",
+      tastes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error finding all tastes",
+    });
+  }
+});
+
 // POST /api/taste
 tasteRouter.post("/", [verifyJWT], async (req: Request, res: Response) => {
   const userId: number = req.user?.id as number;

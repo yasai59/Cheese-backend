@@ -13,6 +13,16 @@ tasteRouter.get("/", async (req: Request, res: Response) => {
     const userId = Number(req.query.userId);
     let tastes: TasteModel[];
     try {
+        if (!userId) {
+            throw new Error("User id is required");
+        }
+    } catch (error) {
+        return res.status(400).json({
+            message: "User id is required",
+        });
+    }
+
+    try {
         tastes = await tasteRepository.findUserTastes(userId);
         return res.json({
             message: "User tastes found",

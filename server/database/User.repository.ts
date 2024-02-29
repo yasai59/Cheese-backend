@@ -2,6 +2,7 @@ import connection from "./connection";
 import type UserModel from "../models/User.model";
 import type { RowDataPacket } from "mysql2";
 import bcrypt from "bcrypt";
+import multer from "multer";
 
 interface IUserRepository {
   save(user: UserModel): Promise<UserModel>;
@@ -9,6 +10,8 @@ interface IUserRepository {
   verify(user: UserModel): Promise<UserModel>;
   update(user: UserModel): Promise<UserModel>;
   findByUsername(username: string): Promise<UserModel>;
+  deactivateAccount(user: UserModel): Promise<UserModel>;
+  uploadImage(user: UserModel, file: Express.Multer.File): Promise<UserModel>;
 }
 
 export default class UserRepository implements IUserRepository {
@@ -126,6 +129,44 @@ export default class UserRepository implements IUserRepository {
       return dbUser;
     } catch (error) {
       throw new Error("Error saving user action");
+    }
+  }
+
+  public async deactivateAccount(user: UserModel): Promise<UserModel> {
+    const query = "UPDATE user SET active = 0 WHERE id = ?";
+    try {
+      await connection.promise().query(query, [user.id]);
+
+      const result = await connection
+        .promise()
+        .query("SELECT * FROM user WHERE id = ?", [user.id]);
+
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const dbUser = users[0] as UserModel;
+      return dbUser;
+    } catch (error) {
+      throw new Error("Error deactivating user");
+    }
+  }
+  public async uploadImage(
+    user: UserModel,
+    file: Express.Multer.File
+  ): Promise<UserModel> {
+    const query = "UPDATE user SET photo = ? WHERE id = ?";
+    try {
+      await connection.promise().query(query, [file.filename, user.id]);
+
+      const result = await connection
+        .promise()
+        .query("SELECT * FROM user WHERE id = ?", [user.id]);
+
+      // TODO: save to folder
+
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const dbUser = users[0] as UserModel;
+      return dbUser;
+    } catch (error) {
+      throw new Error("Error uploading image");
     }
   }
 }

@@ -5,7 +5,7 @@ export default interface User extends RowDataPacket {
   username: string;
   email: string;
   password?: string;
-  active?: boolean;
+  active?: 1 | 0;
   role_id?: number;
   creation_date?: Date;
   lot_number?: number;

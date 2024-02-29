@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import multer from "multer";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
@@ -96,6 +97,7 @@ userRouter.post("/", async (req: Request, res: Response) => {
 userRouter.post("/login", async (req: Request, res: Response) => {
   const username: string = req.body.username;
   const password: string = req.body.password;
+  
 
   // check if the user is an email
   if (!username) {
@@ -158,6 +160,42 @@ userRouter.post("/login", async (req: Request, res: Response) => {
     user: dbUser,
   });
 });
+
+// POST /api/user/deactivate
+userRouter.post("/deactivate", async (req: Request, res: Response) => {
+  const email: string = req.body.email;
+  if (!email) {
+    return res.status(400).json({
+      message: "The email is required",
+    });
+  }
+
+  let user: UserModel;
+  try {
+    user = await userRepository.findByEmail(email);
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error finding the user",
+    });
+  }
+
+  try {
+    await userRepository.deactivateAccount(user);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error deactivating the user",
+    });
+  }
+
+  res.json({
+    message: "User deactivated successfully",
+  });
+})
 
 // PUT /api/user
 userRouter.put("/", async (req: Request, res: Response) => {
@@ -273,5 +311,47 @@ userRouter.get("/reset-password", async (req: Request, res: Response) => {
     "<h1>Password reset successfully to 1234 (this is temporal, we'll make a proper form)</h1>"
   );
 });
+
+// POST /api/user/upload-photo
+userRouter.post("/upload-photo", async (req: Request, res: Response) => {
+  const email: string = req.body.email;
+  const photo: Express.Multer.File = req.body.photo;
+  if (!email) {
+    return res.status(400).json({
+      message: "the email is required",
+    });
+  }
+  if (!photo) {
+    return res.status(400).json({
+      message: "the photo is required",
+    });
+  }
+
+  let user: UserModel;
+  try {
+    user = await userRepository.findByEmail(email);
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error finding the user",
+    });
+  }
+
+  try {
+    await userRepository.uploadImage(user, photo);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error uploading the image",
+    });
+  }
+
+  res.json({
+    message: "Image uploaded successfully",
+  });
+})
 
 export default userRouter;

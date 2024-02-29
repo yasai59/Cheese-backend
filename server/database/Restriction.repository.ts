@@ -15,7 +15,6 @@ export default class RestrictionRepository implements IRestrictionRepository {
   public async findUserRestrictions(
     userId: number
   ): Promise<RestrictionModel[]> {
-    console.log({ userId });
     const query =
       "SELECT r.name, r.id FROM restriction r JOIN user_restriction ur ON r.id = ur.restriction_id WHERE ur.user_id = ?";
     try {

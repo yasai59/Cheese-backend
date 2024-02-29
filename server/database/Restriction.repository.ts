@@ -15,13 +15,15 @@ export default class RestrictionRepository implements IRestrictionRepository {
   public async findUserRestrictions(
     userId: number
   ): Promise<RestrictionModel[]> {
+    console.log({ userId });
     const query =
-      "SELECT r.name FROM restriction r JOIN user_restriction ur ON r.id = ur.restriction_id WHERE ur.user_id = ?";
+      "SELECT r.name, r.id FROM restriction r JOIN user_restriction ur ON r.id = ur.restriction_id WHERE ur.user_id = ?";
     try {
       const result = await connection.promise().query(query, [userId]);
       const restrictions: RowDataPacket[] = result[0] as RowDataPacket[];
       return restrictions as RestrictionModel[];
     } catch (error) {
+      console.log(error);
       throw new Error("Error finding user restrictions");
     }
   }
@@ -33,6 +35,9 @@ export default class RestrictionRepository implements IRestrictionRepository {
     const query =
       "INSERT INTO user_restriction (user_id, restriction_id) VALUES (?, ?)";
     try {
+      await connection
+        .promise()
+        .query("DELETE FROM user_restriction WHERE user_id = ?", [userId]);
       for (let i = 0; i < restrictions.length; i++) {
         await connection.promise().query(query, [userId, restrictions[i]]);
       }

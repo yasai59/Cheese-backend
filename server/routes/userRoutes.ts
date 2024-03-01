@@ -408,4 +408,40 @@ userRouter.delete("/", [verifyJWT], async (req: Request, res: Response) => {
     });
   }
 });
+
+// POST /api/user/google
+userRouter.post(
+  "/google",
+  [
+    check("email", "the email is required"),
+    check("name", "the name is required"),
+    check("photo", "the photo is required"),
+    validarCampos,
+  ],
+  async (req: Request, res: Response) => {
+    // check if the user exists
+    const { email, name, photo } = req.body;
+    let user: UserModel | undefined = undefined;
+    try {
+      user = await userRepository.findByEmail(email);
+    } catch (error) {}
+    if (user != undefined) {
+      // create the token
+      const token: string = jwt.sign(
+        {
+          email: user.email,
+        },
+        process.env.JWT_SECRET as string
+      );
+
+      delete user.password;
+
+      return res.json({
+        message: "User logged in successfully",
+        token,
+        user,
+      });
+    }
+  }
+);
 export default userRouter;

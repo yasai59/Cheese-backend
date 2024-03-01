@@ -442,6 +442,33 @@ userRouter.post(
         user,
       });
     }
+
+    // check if the user exist with the same username, if so, add a number to the username
+    let username = name;
+    let i = 1;
+    while (true) {
+      try {
+        const user = await userRepository.findByUsername(username);
+        if (user) {
+          username = `${name}${i}`;
+          i++;
+        } else {
+          break;
+        }
+      } catch (error) {
+        return res.status(500).json({
+          message: "Error finding the user",
+        });
+      }
+    }
+
+    // create the user
+    const newUser = {
+      email,
+      username: name,
+      role_id: 1,
+    };
+    userRepository.saveGoogle(newUser as UserModel);
   }
 );
 export default userRouter;

@@ -124,6 +124,26 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+  public async saveGoogle(user: UserModel): Promise<UserModel> {
+    const query =
+      "INSERT INTO user (username, email, role_id, google) VALUES (?, ?, ?, 1)";
+    try {
+      await connection
+        .promise()
+        .query(query, [user.username, user.email, user.role_id]);
+
+      const result = await connection
+        .promise()
+        .query("SELECT * FROM user WHERE email = ?", [user.email]);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const dbUser = users[0] as UserModel;
+      return dbUser;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error saving user");
+    }
+  }
+
   public async saveAction(
     user: UserModel,
     verificationCode: number | null,

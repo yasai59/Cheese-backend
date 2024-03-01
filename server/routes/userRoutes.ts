@@ -4,12 +4,14 @@ import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { check } from "express-validator";
 import type { Request, Response } from "express";
 
 import MailSender from "../mail/MailSender";
 import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
+import { validarCampos } from "../helpers/verifyFields";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
 
@@ -66,127 +68,119 @@ userRouter.get("/myUser", [verifyJWT], async (req: Request, res: Response) => {
 });
 
 // POST /api/user
-userRouter.post("/", async (req: Request, res: Response) => {
-  // check the user
-  if (!req.body.user) {
-    return res.status(400).json({
-      message: "the user is required",
-    });
-  }
-
-  // check the password
-  if (!req.body.user.password) {
-    return res.status(400).json({
-      message: "the password is required",
-    });
-  }
-  // extract the user and save to the database
-  let { user }: { user: UserModel } = req.body;
-  user.role_id = user.role_id === 1 ? 1 : 2;
-  user.password = bcrypt.hashSync(user.password ?? "", 10);
-  let dbUser: UserModel;
-  try {
-    dbUser = await userRepository.save(user);
-  } catch (e) {
-    return res.status(500).json({
-      message: "Error creating the user",
-    });
-  }
-  const verificationCode = btoa(dbUser.email);
-  // send the email
-  // TODO: change the link to the production link
-  mailSender.sendMail(
-    dbUser.email,
-    "Welcome to the app",
-    `
+userRouter.post(
+  "/",
+  [
+    check("username", "the user is required").notEmpty(),
+    check("password", "the password is required").notEmpty(),
+    check("email", "the email is required").isEmail(),
+    validarCampos,
+  ],
+  async (req: Request, res: Response) => {
+    // extract the user and save to the database
+    let user: UserModel = req.body;
+    user.role_id = user.role_id === 1 ? 1 : 2;
+    user.password = bcrypt.hashSync(user.password ?? "", 10);
+    let dbUser: UserModel;
+    try {
+      dbUser = await userRepository.save(user);
+    } catch (e) {
+      return res.status(500).json({
+        message: "Error creating the user",
+      });
+    }
+    const verificationCode = btoa(dbUser.email);
+    // send the email
+    // TODO: change the link to the production link
+    mailSender.sendMail(
+      dbUser.email,
+      "Welcome to the app",
+      `
     <h1>Welcome to cheese</h1> 
     <br> 
     <a href="https://apicheese.yasai59.com/api/user/verify?code=${verificationCode}">Click here to verify your account</a>
     `
-  );
-  // create the token
-  const token: string = jwt.sign(
-    {
-      email: dbUser.email,
-    },
-    process.env.JWT_SECRET as string
-  );
+    );
+    // create the token
+    const token: string = jwt.sign(
+      {
+        email: dbUser.email,
+      },
+      process.env.JWT_SECRET as string
+    );
 
-  delete dbUser.password;
+    delete dbUser.password;
 
-  res.json({
-    message: "User created successfully",
-    token,
-    user: dbUser,
-  });
-});
+    res.json({
+      message: "User created successfully",
+      token,
+      user: dbUser,
+    });
+  }
+);
 
 // POST /api/user/login
-userRouter.post("/login", async (req: Request, res: Response) => {
-  const username: string = req.body.username;
-  const password: string = req.body.password;
+userRouter.post(
+  "/login",
+  [
+    check("username", "username is required").notEmpty(),
+    check("password", "password is required").notEmpty(),
+    validarCampos,
+  ],
+  async (req: Request, res: Response) => {
+    const username: string = req.body.username;
+    const password: string = req.body.password;
 
-  // check if the user is an email
-  if (!username) {
-    return res.status(400).json({
-      message: "the user is required",
-    });
-  }
-  if (!password) {
-    return res.status(400).json({
-      message: "the password is required",
-    });
-  }
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    const isEmail = emailRegex.test(username);
 
-  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-  const isEmail = emailRegex.test(username);
+    let dbUser: UserModel;
+    if (isEmail) {
+      try {
+        dbUser = await userRepository.findByEmail(username);
+      } catch (error) {
+        return res.status(400).json({
+          message: "Username or password are invalid",
+        });
+      }
+    } else {
+      try {
+        dbUser = await userRepository.findByUsername(username);
+      } catch (error) {
+        return res.status(400).json({
+          message: "Username or password are invalid",
+        });
+      }
+    }
 
-  let dbUser: UserModel;
-  if (isEmail) {
-    try {
-      dbUser = await userRepository.findByEmail(username);
-    } catch (error) {
+    if (!dbUser) {
       return res.status(400).json({
         message: "Username or password are invalid",
       });
     }
-  } else {
-    try {
-      dbUser = await userRepository.findByUsername(username);
-    } catch (error) {
+
+    if (!bcrypt.compareSync(password, dbUser.password ?? "")) {
       return res.status(400).json({
         message: "Username or password are invalid",
       });
     }
-  }
 
-  if (!dbUser) {
-    return res.status(400).json({
-      message: "Username or password are invalid",
+    delete dbUser.password;
+
+    const token: string = jwt.sign(
+      {
+        email: dbUser.email,
+      },
+      process.env.JWT_SECRET as string
+    );
+
+    res.json({
+      message: "User logged in successfully",
+      token,
+      user: dbUser,
     });
   }
-
-  if (!bcrypt.compareSync(password, dbUser.password ?? "")) {
-    return res.status(400).json({
-      message: "Username or password are invalid",
-    });
-  }
-
-  delete dbUser.password;
-
-  const token: string = jwt.sign(
-    {
-      email: dbUser.email,
-    },
-    process.env.JWT_SECRET as string
-  );
-
-  res.json({
-    message: "User logged in successfully",
-    token,
-    user: dbUser,
-  });
-});
+);
 
 // PUT /api/user
 userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {

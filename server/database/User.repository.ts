@@ -126,7 +126,7 @@ export default class UserRepository implements IUserRepository {
 
   public async saveGoogle(user: UserModel): Promise<UserModel> {
     const query =
-      "INSERT INTO user (username, email, role_id, google, passsord) VALUES (?, ?, ?, 1, '')";
+      "INSERT INTO user (username, email, role_id, google, password) VALUES (?, ?, ?, 1, '')";
     try {
       await connection
         .promise()

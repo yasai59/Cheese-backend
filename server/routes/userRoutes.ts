@@ -12,6 +12,7 @@ import UserRepository from "../database/User.repository";
 import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
 import { validarCampos } from "../helpers/verifyFields";
+import { verifyGoogle } from "../helpers/verifyGoogle";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
 
@@ -420,7 +421,22 @@ userRouter.post(
   ],
   async (req: Request, res: Response) => {
     // check if the user exists
-    const { email, name, photo } = req.body;
+    const { email, name, photo, userId, idToken } = req.body;
+
+    // verify google token
+    try {
+      const user = await verifyGoogle(idToken);
+      if (user !== userId) {
+        return res.status(400).json({
+          message: "Invalid token",
+        });
+      }
+    } catch (e) {
+      return res.status(400).json({
+        message: "Invalid token",
+      });
+    }
+
     let user: UserModel | undefined = undefined;
     try {
       user = await userRepository.findByEmail(email);

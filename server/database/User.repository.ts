@@ -21,6 +21,7 @@ export default class UserRepository implements IUserRepository {
       const user = users[0] as UserModel;
       return user;
     } catch (error) {
+      console.log(error);
       throw new Error("Error finding user by email");
     }
   }

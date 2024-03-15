@@ -27,8 +27,8 @@ const storageCarousel = multer.diskStorage({
         cb(null, path.join(dir, "../../uploads/restaurant_photos/carousel/"));
     },
     filename: (req: PhotoRequest, file, cb) => {
-        const name = req.user?.name + "_" + uuidv4()+ Date.now + "." + path.extname(file.originalname);
-        if(!req.photoName){
+        const name = req.user?.name + "_" + uuidv4() + Date.now + "." + path.extname(file.originalname);
+        if (!req.photoName) {
             req.photoName = [];
         }
         (req.photoName as Array<string>).push(name);
@@ -50,14 +50,11 @@ const storageProfilePicture = multer.diskStorage({
 const uploadCarousel = multer({ storage: storageCarousel });
 const uploadProfilePicture = multer({ storage: storageProfilePicture });
 
-// GET /api/restaurant/photo/carousel
-
-
 // POST /api/restaurant/photo/carousel
 restaurantRouter.post(
     '/photo/carousel',
     [
-        // verifyJWT,
+        verifyJWT,
         uploadCarousel.array("photo", 12)
     ],
     async (req: PhotoRequest, res: Response) => {
@@ -70,27 +67,49 @@ restaurantRouter.post(
             if (!restaurant.id) {
                 return res.status(400).json({ message: "Restaurant id is required" });
             }
-            const query = "INSERT INTO carousel (restaurant_id, photo) VALUES (?, ?)";
-            photos.forEach(photo => {
-                connection.query(query, [restaurant.id, photo], (err) => {
-                    if (err) {
-                        return res.status(500).json({ message: "Error saving photo in database" });
-                    }
-                });
-            });
-            return res.status(201).json({ message: "Photos uploaded successfully" });
+
+            const restaurantCarousel = await restaurantRepository.addPhotoToCarousel(restaurant.id, photos);
+            return res.json({ message: "Photos uploaded successfully", restaurantCarousel });
         } catch (error) {
+            console.log(error);
             res.status(500).json({ message: "Error uploading photos" });
         }
     }
 )
 
+// UPDATE api/restaurant/photo/carousel/:restaurantId
+restaurantRouter.put(
+    "/photo/carousel/:restaurantId",
+    [
+        verifyJWT,
+        uploadCarousel.array("photo", 12)
+    ],
+    async (req: PhotoRequest, res: Response) => {
+        const restaurantId: number = parseInt(req.params.restaurantId);
+        const photos = req.photoName as Array<string>;
+        if (!restaurantId) {
+            res.status(500).json({ message: "Restaurant id is required" });
+            return;
+        }
+        if (!photos) {
+            res.status(500).json({ message: "No photos to update" });
+            return;
+        }
+        try {
+            await restaurantRepository.updatePhotoCarousel(restaurantId, photos);
+            res.status(200).json({ message: "Restaurant carousel updated successfully" });
+        } catch (error) {
+            res.status(500).json({ message: "Error updating the restaurant carousel" });
+        }
+    });
+
+
 // GET /api/restaurant/photo/profile-picture
 restaurantRouter.get(
     "/photo/profile-picture",
-    // [
-    //     verifyJWT
-    // ],
+    [
+        verifyJWT
+    ],
     async (req: Request, res: Response) => {
         let restaurant = req.body;
         if (!restaurant) {
@@ -115,7 +134,7 @@ restaurantRouter.get(
 restaurantRouter.post(
     "/photo/profile-picture",
     [
-        // verifyJWT,
+        verifyJWT,
         uploadProfilePicture.single("photo")
     ],
     async (req: PhotoRequest, res: Response) => {
@@ -128,6 +147,7 @@ restaurantRouter.post(
             if (!restaurant.id) {
                 return res.status(400).json({ message: "Restaurant id is required" });
             }
+
             const query = "UPDATE restaurant SET photo = ? WHERE id = ?";
             connection.query(query, [photo, restaurant?.id], (err) => {
                 if (err) {
@@ -145,8 +165,7 @@ restaurantRouter.post(
     "/",
     [
         verifyJWT,
-        check("name", "Name is required").not().isEmpty(),
-        check("owner_id", "Owner id is required").not().isEmpty(),
+        // check("name", "Name is required").not().isEmpty(),
         validarCampos
     ], async (req: Request, res: Response) => {
         const restaurant: RestaurantModel = req.body;
@@ -157,11 +176,13 @@ restaurantRouter.post(
         }
         try {
             const restaurantSaved = await restaurantRepository.save(restaurant, user);
+            console.log(restaurantSaved);
             res.status(201).json({
                 message: "Restaurant created successfully",
                 restaurantSaved
             });
         } catch (error) {
+            console.log(error);
             res.status(500).json({ message: "Error creating the restaurant" });
         }
     });
@@ -183,6 +204,46 @@ restaurantRouter.get(
         }
     });
 
+// UPDATE api/restaurant/:restaurantId
+restaurantRouter.put(
+    "/:restaurantId",
+    [
+        verifyJWT,
+        validarCampos
+    ],
+    async (req: Request, res: Response) => {
+        const restaurant: RestaurantModel = req.body;
+        if (!restaurant.id) {
+            res.status(500).json({ message: "Restaurant id is required" });
+            return;
+        }
+        try {
+            const restaurantUpdated = await restaurantRepository.update(restaurant);
+            res.status(200).json({ message: "Restaurant updated successfully", restaurantUpdated });
+        } catch (error) {
+            res.status(500).json({ message: "Error updating the restaurant" });
+        }
+    });
+
+// DELETE api/restaurant/:restaurantId
+restaurantRouter.delete(
+    "/:restaurantId",
+    [
+        verifyJWT,
+    ],
+    async (req: Request, res: Response) => {
+        const restaurantId: number = parseInt(req.params.restaurantId);
+        if (!restaurantId) {
+            res.status(500).json({ message: "Restaurant id is required" });
+            return;
+        }
+        try {
+            await restaurantRepository.delete(restaurantId);
+            res.status(200).json({ message: "Restaurant deleted successfully" });
+        } catch (error) {
+            res.status(500).json({ message: "Error deleting the restaurant" });
+        }
+    });
 
 // GET api/restaurant/favorite-restaurants
 restaurantRouter.get(
@@ -264,5 +325,6 @@ restaurantRouter.post(
             res.status(500).json({ message: "Error adding liked restaurant" });
         }
     });
+
 
 export default restaurantRouter;

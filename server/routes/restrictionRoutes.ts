@@ -47,7 +47,7 @@ restrictionRouter.get(
   }
 );
 
-// POST /api/restriction
+// POST /api/restriction/:userId
 restrictionRouter.post(
   "/",
   [verifyJWT],
@@ -71,5 +71,50 @@ restrictionRouter.post(
     }
   }
 );
+
+// GET /api/restriction/dish/:dishId
+restrictionRouter.get(
+  "/dish/:dishId",
+  [verifyJWT],
+  async (req: Request, res: Response) => {
+    const dishId: number = Number(req.params.dishId);
+    let restrictions: RestrictionModel[];
+    try {
+      restrictions = await restrictionRepository.findDishRestrictions(dishId);
+      return res.json({
+        message: "Dish restrictions found",
+        restrictions,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error finding dish restrictions",
+      });
+    }
+  }
+);
+
+// POST /api/restriction/dish/:dishId
+restrictionRouter.post(
+  "/dish/:dishId",
+  [verifyJWT],
+  async (req: Request, res: Response) => {
+    const dishId: number = Number(req.params.dishId);
+    const { restrictions } = req.body;
+    let dishRestrictions: RestrictionModel[];
+    try {
+      dishRestrictions = await restrictionRepository.addRestrictionsToDish(
+        dishId,
+        restrictions
+      );
+      return res.json({
+        message: "Restrictions added to dish",
+        dishRestrictions,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error adding restrictions to dish",
+      });
+    }
+  });
 
 export default restrictionRouter;

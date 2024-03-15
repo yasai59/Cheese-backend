@@ -9,6 +9,11 @@ interface IRestrictionRepository {
     restrictions: number[]
   ): Promise<RestrictionModel[]>;
   findAll(): Promise<RestrictionModel[]>;
+  addRestrictionsToDish(
+    dishId: number,
+    restrictions: number[]
+  ): Promise<RestrictionModel[]>;
+  findDishRestrictions(dishId: number): Promise<RestrictionModel[]>;
 }
 
 export default class RestrictionRepository implements IRestrictionRepository {
@@ -37,8 +42,8 @@ export default class RestrictionRepository implements IRestrictionRepository {
       await connection
         .promise()
         .query("DELETE FROM user_restriction WHERE user_id = ?", [userId]);
-      for (let i = 0; i < restrictions.length; i++) {
-        await connection.promise().query(query, [userId, restrictions[i]]);
+      for (const restriction of restrictions) {
+        await connection.promise().query(query, [userId, restriction]);
       }
       return await this.findUserRestrictions(userId);
     } catch (error) {
@@ -54,6 +59,31 @@ export default class RestrictionRepository implements IRestrictionRepository {
       return restrictions as RestrictionModel[];
     } catch (error) {
       throw new Error("Error finding all restrictions");
+    }
+  }
+
+  public async findDishRestrictions(dishId: number): Promise<RestrictionModel[]> {
+    const query =
+      "SELECT r.name, r.id FROM restriction r JOIN dish_restriction dr ON r.id = dr.restriction_id WHERE dr.dish_id = ?";
+    try {
+      const result = await connection.promise().query(query, [dishId]);
+      const restrictions: RowDataPacket[] = result[0] as RowDataPacket[];
+      return restrictions as RestrictionModel[];
+    } catch (error) {
+      throw new Error("Error finding dish restrictions");
+    }
+  }
+
+  public async addRestrictionsToDish(dishId: number, restrictions: number[]): Promise<RestrictionModel[]> {
+    const query = "INSERT INTO dish_restriction (dish_id, restriction_id) VALUES (?, ?)";
+    try {
+      await connection.promise().query("DELETE FROM dish_restriction WHERE dish_id = ?", [dishId]);
+      for (const restriction of restrictions) {
+        await connection.promise().query(query, [dishId, restriction]);
+      }
+      return await this.findDishRestrictions(dishId);
+    } catch (error) { 
+      throw new Error("Error adding restrictions to dish");
     }
   }
 }

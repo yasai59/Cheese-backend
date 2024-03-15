@@ -6,6 +6,7 @@ import userRouter from "../routes/userRoutes";
 import tasteRouter from "../routes/tasteRoutes";
 import restrictionRouter from "../routes/restrictionRoutes";
 import restaurantRouter from "../routes/restaurantRoutes";
+import dishRouter from "../routes/dishRoutes";
 
 export class Server {
   private app: express.Application;
@@ -39,6 +40,7 @@ export class Server {
     this.app.use(this.apiPath + "/taste", tasteRouter);
     this.app.use(this.apiPath + "/restriction", restrictionRouter);
     this.app.use(this.apiPath + "/restaurant", restaurantRouter)
+    this.app.use(this.apiPath + "/dish", dishRouter);
   }
 
   private sockets(): void {

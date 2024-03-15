@@ -27,24 +27,24 @@ const upload = multer({ storage });
 const dishRepository = new DishRepository();
 const dishRouter: Router = express.Router();
 
-// GET /dishes/:restaurant_id
-dishRouter.get("/:restaurant_id",
+// GET /dish/:restaurantId
+dishRouter.get("/:restaurantId",
 [
     verifyJWT,
     verifyProperty,
 ],
    async (req: Request, res: Response) => {
-    const restaurant_id = Number(req.params.restaurant_id);
+    const restaurantId = Number(req.params.restaurantId);
     try {
-        const dishes = await dishRepository.findRestaurantDishes(restaurant_id);
+        const dishes = await dishRepository.findRestaurantDishes(restaurantId);
         res.status(200).json(dishes);
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
-// POST /dishes/:restaurant_id
-dishRouter.post("/:restaurant_id",
+// POST /dish/:restaurantId
+dishRouter.post("/:restaurantId",
 [
     verifyJWT,
     verifyProperty,
@@ -60,8 +60,8 @@ dishRouter.post("/:restaurant_id",
     }
 });
 
-// PUT /dishes/:dish_id
-dishRouter.put("/:dish_id",
+// PUT /dish/:dishId
+dishRouter.put("/:dishId",
 [
     verifyJWT,
     verifyProperty,
@@ -76,8 +76,11 @@ dishRouter.put("/:dish_id",
     }
 });
 
-// DELETE /dishes/:dish_id
-dishRouter.delete("/:dish_id", verifyJWT, verifyProperty, async (req: Request, res: Response) => {
+// DELETE /dish/:dishId
+dishRouter.delete("/:dishId", 
+    [verifyJWT,
+    verifyProperty],
+    async (req: Request, res: Response) => {
     const dish_id = Number(req.params.dish_id);
     try {
         await dishRepository.deleteDish(dish_id);

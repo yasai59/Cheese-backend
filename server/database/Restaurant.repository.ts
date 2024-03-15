@@ -42,10 +42,11 @@ export default class RestaurantRepository implements IRestaurantRepository {
     public async findByOwner(user: User): Promise<RestaurantModel[]> {
         const query = "SELECT * FROM restaurant WHERE owner_id = ?";
         try {
-            const result = await connection.promise().query(query, [user.user_id]);
+            const result = await connection.promise().query(query, [user.id]);
             const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
             return restaurants as RestaurantModel[];
         } catch (error) {
+            console.log(error)
             throw new Error("Error finding restaurants by owner");
         }    
     }
@@ -53,7 +54,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
     public async findFavoriteRestaurants(user: User): Promise<RestaurantModel[]> {
         const query = "SELECT * FROM restaurant WHERE id IN (SELECT restaurant_id FROM favorite_restaurant WHERE user_id = ?)";
         try {
-            const result = await connection.promise().query(query, [user.user_id]);
+            const result = await connection.promise().query(query, [user.id]);
             const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
             return restaurants as RestaurantModel[];
         } catch (error) {
@@ -64,7 +65,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
     public async addFavoriteRestaurant(user: User, restaurantId: number): Promise<void> {
         const query = "INSERT INTO favorite_restaurant (user_id, restaurant_id) VALUES (?, ?)";
         try {
-            await connection.promise().query(query, [user.user_id, restaurantId]);
+            await connection.promise().query(query, [user.id, restaurantId]);
         } catch (error) {
             throw new Error("Error adding favorite restaurant");
         }
@@ -73,7 +74,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
     public async findLikedRestaurants(user: User): Promise<RestaurantModel[]> {
         const query = "SELECT * FROM restaurant WHERE id IN (SELECT restaurant_id FROM liked_restaurant WHERE user_id = ?)";
         try {
-            const result = await connection.promise().query(query, [user.user_id]);
+            const result = await connection.promise().query(query, [user.id]);
             const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
             return restaurants as RestaurantModel[];
         } catch (error) {
@@ -84,7 +85,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
     public async addLikedRestaurant(user: User, restaurantId: number): Promise<void> {
         const query = "INSERT INTO liked_restaurant (user_id, restaurant_id) VALUES (?, ?)";
         try {
-            await connection.promise().query(query, [user.user_id, restaurantId]);
+            await connection.promise().query(query, [user.id, restaurantId]);
         } catch (error) {
             throw new Error("Error adding liked restaurant");
         }

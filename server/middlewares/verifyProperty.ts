@@ -6,18 +6,18 @@ import RestaurantRepository from "../database/Restaurant.repository";
 const restaurantRepository = new RestaurantRepository();
 
 export const verifyProperty = async (req: Request, res: Response, next: NextFunction) => {
-    const restaurant_id = Number(req.params.restaurant_id);
+    const restaurantId = Number(req.params.restaurantId);
     const user = req.user as UserModel;
 
-    if (!restaurant_id) {
-        return res.status(404).json({ message: "Unauthorized" });
+    if (!restaurantId) {
+        return res.status(404).json({ message: "Unauthorized, no id" });
     }
 
     try {
         const userRestaurants = await restaurantRepository.findByOwner(user);
-        const restaurant = userRestaurants.find((r: RestaurantModel) => r.id === restaurant_id);
+        const restaurant = userRestaurants.find((r: RestaurantModel) => r.id === restaurantId);
         if (!restaurant) {
-            return res.status(404).json({ message: "Unauthorized" });
+            return res.status(404).json({ message: "Unauthorized, no restaurant found" });
         }
         req.body.restaurant = restaurant;
         next();

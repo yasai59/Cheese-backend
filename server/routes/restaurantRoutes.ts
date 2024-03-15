@@ -195,9 +195,9 @@ restaurantRouter.get(
         verifyJWT,
     ],
     async (req: Request, res: Response) => {
-        const user: User | undefined = req.user;
+        const user: User = req.user as User;
         try {
-            const restaurants = await restaurantRepository.findByOwner(user?.user_id);
+            const restaurants = await restaurantRepository.findByOwner(user);
             res.status(200).json(restaurants);
         } catch (error) {
             res.status(500).json({ message: "Error finding restaurants by owner" });
@@ -253,13 +253,18 @@ restaurantRouter.get(
     ]
     , async (req: Request, res: Response) => {
         const user: User | undefined = req.user;
+        if (!user) {
+            res.status(500).json({ message: "User not found" });
+            return;
+        }
         try {
-            const favoriteRestaurants = await restaurantRepository.findFavoriteRestaurants(user?.user_id);
+            const favoriteRestaurants = await restaurantRepository.findFavoriteRestaurants(user);
             if (favoriteRestaurants.length === 0) {
                 res.status(404).json({ message: "No favorite restaurants found" });
             }
             res.status(200).json(favoriteRestaurants);
         } catch (error) {
+            console.log(error);
             res.status(500).json({ message: "Error finding favorite restaurants by user" });
         }
     })
@@ -277,8 +282,12 @@ restaurantRouter.post(
             res.status(500).json({ message: "Restaurant id is required" });
             return;
         }
+        if (!user) {
+            res.status(500).json({ message: "User not found" });
+            return;
+        }
         try {
-            await restaurantRepository.addFavoriteRestaurant(user?.user_id, restaurantId);
+            await restaurantRepository.addFavoriteRestaurant(user, restaurantId);
             res.status(200).json({ message: "Favorite restaurant added successfully" });
         } catch (error) {
             res.status(500).json({ message: "Error adding favorite restaurant" });
@@ -294,8 +303,12 @@ restaurantRouter.get(
     ],
     async (req: Request, res: Response) => {
         const user: User | undefined = req.user;
+        if (!user) {
+            res.status(500).json({ message: "User not found" });
+            return;
+        }
         try {
-            const likedRestaurants = await restaurantRepository.findLikedRestaurants(user?.user_id);
+            const likedRestaurants = await restaurantRepository.findLikedRestaurants(user);
             if (likedRestaurants.length === 0) {
                 res.status(404).json({ message: "No liked restaurants found" });
             }
@@ -314,15 +327,40 @@ restaurantRouter.post(
     async (req: Request, res: Response) => {
         const user: User | undefined = req.user;
         const restaurantId: number = parseInt(req.params.restaurantId);
+        if (!user) {
+            res.status(500).json({ message: "User not found" });
+            return;
+        }
         if (!restaurantId) {
             res.status(500).json({ message: "Restaurant id is required" });
             return;
         }
         try {
-            await restaurantRepository.addLikedRestaurant(user?.user_id, restaurantId);
+            await restaurantRepository.addLikedRestaurant(user, restaurantId);
             res.status(200).json({ message: "Liked restaurant added successfully" });
         } catch (error) {
             res.status(500).json({ message: "Error adding liked restaurant" });
+        }
+    });
+
+// GET api/restaurant/:owner_id
+restaurantRouter.get("/:owner_id",
+    [
+        verifyJWT,
+    ],
+    async (req: Request, res: Response) => {
+        const user: User | undefined = req.user;
+        if (!user) {
+            res.status(500).json({ message: "User not found" });
+            return;
+        }
+        const owner_id = user.user_id;
+        try {
+            const restaurants = await restaurantRepository.findByOwner(owner_id);
+            res.status(200).json(restaurants);
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Error finding restaurants by owner" });
         }
     });
 

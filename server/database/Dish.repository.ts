@@ -49,6 +49,9 @@ export default class DishRepository implements IDishRepository {
         try {
             const result = await connection.promise().query(query, [restaurantId]);
             const dishes: RowDataPacket[] = result[0] as RowDataPacket[];
+            if (dishes.length === 0) {
+                throw new Error("No dishes found");
+            }
             return dishes as DishModel[];
         } catch (error) {
             console.log(error);

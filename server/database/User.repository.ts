@@ -179,35 +179,75 @@ export default class UserRepository implements IUserRepository {
       throw new Error("Error deleting user");
     }
   }
-  
+
   public async getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel> {
-    const query = `SELECT u.id, u.username, u.email, u.role_id, u.lot_number, u.photo, 
-    r.name as role_name, 
-    res.id, res.name as restaurant_name, res.address as restaurant_address, res.phone as restaurant_phone, res.photo as restaurant_photo, 
-    fr.restaurant_id as favorite_restaurant_id,
-    lr.restaurant_id as liked_restaurant_id,
-    ur.restriction_id as user_restriction_id, re.name as restriction_name,
-    ut.taste_id as user_taste_id, t.name as taste_name
-    FROM user u
-    INNER JOIN role r ON u.role_id = r.id
-    INNER JOIN restaurant res ON u.id = res.owner_id
-    INNER JOIN favorite_restaurant fr ON u.id = fr.user_id
-    INNER JOIN liked_restaurant lr ON u.id = lr.user_id
-    INNER JOIN user_restriction ur ON u.id = ur.user_id
-    INNER JOIN restriction re ON ur.restriction_id = re.id
-    INNER JOIN user_taste ut ON u.id = ut.user_id
-    INNER JOIN taste t ON ut.taste_id = t.id
-    WHERE u.id = ?`;
+    let subQueryUserRestaurants = `
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', rest.id, 'name', rest.name, 'address', rest.address, 'phone', rest.phone, 'photo', rest.photo))
+    FROM restaurant rest
+    JOIN user u ON rest.owner_id = u.id
+    WHERE rest.owner_id = u.id
+    `;
+
+    let subQueryFavoriteRestaurants = `
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', fr.restaurant_id, 'name', rest.name))
+    FROM favorite_restaurant fr
+    JOIN restaurant rest ON fr.restaurant_id = rest.id
+    WHERE fr.user_id = u.id
+    `;
+
+    let subQueryLikedRestaurants = `
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', lr.restaurant_id, 'name', rest.name))
+    FROM liked_restaurant lr
+    JOIN restaurant rest ON lr.restaurant_id = rest.id
+    WHERE lr.user_id = u.id
+    `;
+
+    let subQueryUserRestrictions = `
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', ur.restriction_id, 'name', re.name))
+    FROM user_restriction ur
+    JOIN restriction re ON ur.restriction_id = re.id
+    WHERE ur.user_id = u.id
+    `;
+
+    let subQueryUserTastes = `
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', ut.taste_id, 'name', t.name))
+    FROM user_taste ut
+    JOIN taste t ON ut.taste_id = t.id
+    WHERE ut.user_id = u.id
+    `;
+
+    const query = `
+    SELECT 
+        u.id, u.username, u.email, u.role_id, u.lot_number, u.photo, 
+        r.name as role_name, 
+        (${subQueryUserRestaurants}) as user_restaurants,
+        (${subQueryFavoriteRestaurants}) as favorite_restaurants,
+        (${subQueryLikedRestaurants}) as liked_restaurants,
+        (${subQueryUserRestrictions}) as restrictions,
+        (${subQueryUserTastes}) as tastes
+    FROM 
+        user u
+        INNER JOIN role r ON u.role_id = r.id
+    WHERE 
+        u.id = ?`;
 
     try {
       const result = await connection.promise().query(query, [user.id]);
       const users: RowDataPacket[] = result[0] as RowDataPacket[];
       const dbUser = users[0] as UserModel;
+
+      dbUser.user_restaurants = JSON.parse(dbUser.user_restaurants);
+      dbUser.favorite_restaurants = JSON.parse(dbUser.favorite_restaurants);
+      dbUser.liked_restaurants = JSON.parse(dbUser.liked_restaurants);
+      dbUser.restrictions = JSON.parse(dbUser.restrictions);
+      dbUser.tastes = JSON.parse(dbUser.tastes);
+
       return dbUser;
     } catch (error) {
       throw new Error("Error getting info from user");
     }
   }
+
 
 
 }

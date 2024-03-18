@@ -302,13 +302,13 @@ restaurantRouter.get(
         verifyJWT,
     ],
     async (req: Request, res: Response) => {
-        const user: User | undefined = req.user;
+        let user: User | undefined = req.user;
         if (!user) {
             res.status(500).json({ message: "User not found" });
             return;
         }
         try {
-            const likedRestaurants = await restaurantRepository.findLikedRestaurants(user);
+            let likedRestaurants = await restaurantRepository.findLikedRestaurants(user);
             if (likedRestaurants.length === 0) {
                 res.status(404).json({ message: "No liked restaurants found" });
             }

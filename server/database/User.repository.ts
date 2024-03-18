@@ -10,6 +10,7 @@ interface IUserRepository {
   update(user: UserModel): Promise<UserModel>;
   findByUsername(username: string): Promise<UserModel>;
   delete(id: number): Promise<void>;
+  getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel>;
 }
 
 export default class UserRepository implements IUserRepository {
@@ -178,4 +179,35 @@ export default class UserRepository implements IUserRepository {
       throw new Error("Error deleting user");
     }
   }
+  
+  public async getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel> {
+    const query = `SELECT u.id, u.username, u.email, u.role_id, u.lot_number, u.photo, 
+    r.name as role_name, 
+    res.id, res.name as restaurant_name, res.address as restaurant_address, res.phone as restaurant_phone, res.photo as restaurant_photo, 
+    fr.restaurant_id as favorite_restaurant_id,
+    lr.restaurant_id as liked_restaurant_id,
+    ur.restriction_id as user_restriction_id, re.name as restriction_name,
+    ut.taste_id as user_taste_id, t.name as taste_name
+    FROM user u
+    INNER JOIN role r ON u.role_id = r.id
+    INNER JOIN restaurant res ON u.id = res.owner_id
+    INNER JOIN favorite_restaurant fr ON u.id = fr.user_id
+    INNER JOIN liked_restaurant lr ON u.id = lr.user_id
+    INNER JOIN user_restriction ur ON u.id = ur.user_id
+    INNER JOIN restriction re ON ur.restriction_id = re.id
+    INNER JOIN user_taste ut ON u.id = ut.user_id
+    INNER JOIN taste t ON ut.taste_id = t.id
+    WHERE u.id = ?`;
+
+    try {
+      const result = await connection.promise().query(query, [user.id]);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const dbUser = users[0] as UserModel;
+      return dbUser;
+    } catch (error) {
+      throw new Error("Error getting info from user");
+    }
+  }
+
+
 }

@@ -191,6 +191,8 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
 
   user.role_id = user.role_id === 1 ? 1 : 2;
 
+  delete user.password;
+
   try {
     const userDb = await userRepository.update(user);
     if (!userDb) throw new Error("Error updating the user");
@@ -487,4 +489,26 @@ userRouter.post(
     userRepository.saveGoogle(newUser as UserModel);
   }
 );
+
+// GET /api/user/all-info
+userRouter.get(
+  "/all-info",
+  [verifyJWT,],
+  async (req: Request, res: Response) => {
+    let user = req.user as UserModel;
+    try {
+      let dbUser = await userRepository.getAllInfoUserFromOtherTables(user);
+      if (!dbUser) throw new Error("User not found");
+      return res.json({
+        message: "User found",
+        user: dbUser,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error sql",
+      });
+    }
+  }
+)
+
 export default userRouter;

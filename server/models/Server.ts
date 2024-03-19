@@ -31,7 +31,13 @@ export class Server {
   // midlewares
   private middlewares(): void {
     this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: false }));
+    this.app.use(
+      express.urlencoded({
+        extended: false,
+        limit: "50mb",
+        parameterLimit: 1000000,
+      })
+    );
     this.app.use(cors());
   }
 
@@ -39,7 +45,7 @@ export class Server {
     this.app.use(this.apiPath + "/user", userRouter);
     this.app.use(this.apiPath + "/taste", tasteRouter);
     this.app.use(this.apiPath + "/restriction", restrictionRouter);
-    this.app.use(this.apiPath + "/restaurant", restaurantRouter)
+    this.app.use(this.apiPath + "/restaurant", restaurantRouter);
     this.app.use(this.apiPath + "/dish", dishRouter);
   }
 

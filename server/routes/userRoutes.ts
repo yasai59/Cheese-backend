@@ -13,6 +13,7 @@ import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
 import { validarCampos } from "../helpers/verifyFields";
 import { verifyGoogle } from "../helpers/verifyGoogle";
+import axios from "axios";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
 
@@ -190,8 +191,6 @@ userRouter.put("/", [verifyJWT], async (req: Request, res: Response) => {
   user.id = reqUser.id;
 
   user.role_id = user.role_id === 1 ? 1 : 2;
-
-  delete user.password;
 
   try {
     const userDb = await userRepository.update(user);
@@ -423,20 +422,34 @@ userRouter.post(
   ],
   async (req: Request, res: Response) => {
     // check if the user exists
-    const { email, name, photo, userId, idToken } = req.body;
+    const { email, name, photo, userId, idToken, web = false } = req.body;
+
+    console.log({ email, name, photo, userId, idToken, web });
 
     // verify google token
-    try {
-      const user = await verifyGoogle(idToken);
-      if (user !== userId) {
+    if (!web) {
+      try {
+        const user = await verifyGoogle(idToken);
+        if (user !== userId) {
+          return res.status(400).json({
+            message: "Invalid token",
+          });
+        }
+      } catch (e) {
         return res.status(400).json({
           message: "Invalid token",
         });
       }
-    } catch (e) {
-      return res.status(400).json({
-        message: "Invalid token",
-      });
+    } else {
+      const userResp = await axios.get(
+        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${idToken}`
+      );
+
+      if (userId !== userResp.data.id) {
+        return res.status(400).json({
+          message: "Invalid token",
+        });
+      }
     }
 
     let user: UserModel | undefined = undefined;
@@ -489,26 +502,4 @@ userRouter.post(
     userRepository.saveGoogle(newUser as UserModel);
   }
 );
-
-// GET /api/user/all-info
-userRouter.get(
-  "/all-info",
-  [verifyJWT,],
-  async (req: Request, res: Response) => {
-    let user = req.user as UserModel;
-    try {
-      let dbUser = await userRepository.getAllInfoUserFromOtherTables(user);
-      if (!dbUser) throw new Error("User not found");
-      return res.json({
-        message: "User found",
-        user: dbUser,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error sql",
-      });
-    }
-  }
-)
-
 export default userRouter;

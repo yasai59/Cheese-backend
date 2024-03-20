@@ -11,12 +11,15 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import connection from "../database/connection";
 import fs from "fs";
+import DishRepository from "../database/Dish.repository";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
 }
 
 const restaurantRepository = new RestaurantRepository();
+
+const dishRepository = new DishRepository();
 
 const restaurantRouter: Router = express.Router();
 
@@ -202,7 +205,7 @@ restaurantRouter.post(
   [
     verifyJWT,
     uploadProfilePicture.single("image"),
-    uploadCarousel.array("photo", 12),
+    // uploadCarousel.array("photo", 12),
     validarCampos,
   ],
   async (req: PhotoRequest, res: Response) => {
@@ -231,11 +234,49 @@ restaurantRouter.get("/", [verifyJWT], async (req: Request, res: Response) => {
   const user: User = req.user as User;
   try {
     const restaurants = await restaurantRepository.findByOwner(user);
-    res.status(200).json(restaurants);
+
+    const promises = restaurants.map(async (restaurant) => {
+      // add the dishes to the restaurant
+      const dishes = await dishRepository.findRestaurantDishes(
+        restaurant.id as number
+      );
+      return { ...restaurant, dishes };
+    });
+
+    const restaurantsWithDishes = await Promise.all(promises);
+
+    console.log(restaurantsWithDishes);
+
+    res.status(200).json(restaurantsWithDishes);
   } catch (error) {
     res.status(500).json({ message: "Error finding restaurants by owner" });
   }
 });
+
+// GET api/restaurant/profilephoto/:name
+restaurantRouter.get(
+  "/profilephoto/:name",
+  [],
+  async (req: Request, res: Response) => {
+    const name = req.params.name;
+
+    if (!name) {
+      res.status(400).json({ message: "Photo name is required" });
+      return;
+    }
+    try {
+      res.sendFile(
+        path.join(
+          dir,
+          "../../uploads/restaurant_photos/profile_pictures/" + name
+        )
+      );
+    } catch (error) {
+      console.log("errocilo :C");
+      res.status(500).json({ message: "Error finding the photo" });
+    }
+  }
+);
 
 // UPDATE api/restaurant/:restaurantId
 restaurantRouter.put(

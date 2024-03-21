@@ -442,4 +442,21 @@ restaurantRouter.get(
   }
 );
 
+restaurantRouter.get(
+  "/specific/:restaurantId",
+  async (req: Request, res: Response) => {
+    const restaurantId: number = parseInt(req.params.restaurantId);
+    if (!restaurantId) {
+      res.status(400).json({ message: "Restaurant id is required" });
+      return;
+    }
+    try {
+      const restaurant = await restaurantRepository.findById(restaurantId);
+      res.json(restaurant);
+    } catch (error) {
+      res.status(500).json({ message: "Error finding the restaurant" });
+    }
+  }
+);
+
 export default restaurantRouter;

@@ -50,10 +50,15 @@ dishRouter.post("/:restaurantId",
     verifyProperty,
     upload.single("photo")
 ],
-     async (req: Request, res: Response) => {
-    const dish = req.body.dish as DishModel;
+    async (req: Request, res: Response) => {
+    const restaurantId = Number(req.params.restaurantId);
+
+    console.log(restaurantId);
+
+
+    const dish = req.body as DishModel;
     try {
-        const dishSaved = await dishRepository.addDish(dish);
+        const dishSaved = await dishRepository.addDish(restaurantId, dish);
         res.status(201).json(dishSaved);
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error" });

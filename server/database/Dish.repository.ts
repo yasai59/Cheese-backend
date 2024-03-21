@@ -3,21 +3,21 @@ import type DishModel from "../models/Dish.model";
 import type { RowDataPacket } from "mysql2";
 
 interface IDishRepository {
-  addDish(dish: DishModel): Promise<DishModel>;
+  addDish(restaurantId: number, dish: DishModel): Promise<DishModel>;
   updateDish(dish: DishModel): Promise<DishModel>;
   deleteDish(dishId: number): Promise<void>;
   findRestaurantDishes(restaurantId: number): Promise<DishModel[]>;
 }
 
 export default class DishRepository implements IDishRepository {
-  public async addDish(dish: DishModel): Promise<DishModel> {
+  public async addDish(restaurantId: number, dish: DishModel): Promise<DishModel> {
     const query =
       "INSERT INTO dish (restaurant_id, name, price, photo, description) VALUES (?, ?, ?, ?, ?)";
     try {
       const result = await connection
         .promise()
         .query(query, [
-          dish.restaurant_id,
+          restaurantId,
           dish.name,
           dish.price,
           dish.photo,

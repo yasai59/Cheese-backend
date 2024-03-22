@@ -178,3 +178,4 @@ dist
 uploads/user_photos/*.png
 uploads/restaurant_photos/profile_pictures/*.jpg
 uploads/restaurant_photos/carousel/*.jpg
+uploads/dish_photos/*.jpg

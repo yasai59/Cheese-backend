@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { check } from "express-validator";
 import { validarCampos } from "../helpers/verifyFields";
 import RestaurantRepository from "../database/Restaurant.repository";
@@ -15,6 +15,7 @@ import DishRepository from "../database/Dish.repository";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
+  pfp?: string;
 }
 
 const restaurantRepository = new RestaurantRepository();
@@ -63,8 +64,40 @@ const storageProfilePicture = multer.diskStorage({
   },
 });
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === "photo") {
+      cb(null, path.join(dir, "../../uploads/restaurant_photos/carousel/"));
+    } else {
+      cb(
+        null,
+        path.join(dir, "../../uploads/restaurant_photos/profile_pictures/")
+      );
+    }
+  },
+  filename: (req: PhotoRequest, file, cb) => {
+    const name =
+      req.user?.username +
+      "_" +
+      uuidv4() +
+      Date.now() +
+      path.extname(file.originalname);
+    if (file.fieldname === "photo") {
+      if (!req.photoName) {
+        req.photoName = [];
+      }
+      (req.photoName as Array<string>).push(name);
+    } else {
+      req.pfp = name;
+    }
+
+    cb(null, name);
+  },
+});
+
 const uploadCarousel = multer({ storage: storageCarousel });
 const uploadProfilePicture = multer({ storage: storageProfilePicture });
+const upload = multer({ storage: storage });
 
 // POST /api/restaurant/photo/carousel
 restaurantRouter.post(
@@ -202,12 +235,7 @@ restaurantRouter.post(
 // POST api/restaurant
 restaurantRouter.post(
   "/",
-  [
-    verifyJWT,
-    uploadProfilePicture.single("image"),
-    // uploadCarousel.array("photo", 12),
-    validarCampos,
-  ],
+  [verifyJWT, upload.any(), validarCampos],
   async (req: PhotoRequest, res: Response) => {
     let restaurant: RestaurantModel = req.body;
     const user: User | undefined = req.user;
@@ -216,7 +244,7 @@ restaurantRouter.post(
       return;
     }
     try {
-      restaurant.photo = req.photoName as string;
+      restaurant.photo = req.pfp as string;
       const restaurantSaved = await restaurantRepository.save(restaurant, user);
       res.status(201).json({
         message: "Restaurant created successfully",

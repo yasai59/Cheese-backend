@@ -246,6 +246,14 @@ restaurantRouter.post(
     try {
       restaurant.photo = req.pfp as string;
       const restaurantSaved = await restaurantRepository.save(restaurant, user);
+
+      const photos = req.photoName as Array<string>;
+      if (photos) {
+        await restaurantRepository.addPhotoToCarousel(
+          restaurantSaved.id as number,
+          photos
+        );
+      }
       res.status(201).json({
         message: "Restaurant created successfully",
         restaurantSaved,

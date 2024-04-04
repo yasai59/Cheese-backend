@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 import connection from "../database/connection";
 import fs from "fs";
 import DishRepository from "../database/Dish.repository";
+import { verifyProperty } from "../middlewares/verifyProperty";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
@@ -157,49 +158,6 @@ restaurantRouter.put(
   }
 );
 
-// GET /api/restaurant/photo/profile-picture
-restaurantRouter.get(
-  "/photo/profile-picture",
-  [verifyJWT],
-  async (req: Request, res: Response) => {
-    let restaurant = req.body;
-    if (!restaurant) {
-      return res.sendFile(
-        path.join(
-          dir,
-          "../../uploads/restaurant_photos/profile_pictures/default.jpg"
-        )
-      );
-    }
-    try {
-      if (
-        !fs.existsSync(
-          path.join(dir, "../../uploads/restaurant_photos/profile_pictures/")
-        )
-      ) {
-        return res.sendFile(
-          path.join(
-            dir,
-            "../../uploads/restaurant_photos/profile_pictures/default.jpg"
-          )
-        );
-      }
-      res.sendFile(
-        path.join(
-          dir,
-          "../../uploads/restaurant_photos/profile_pictures/" + restaurant.photo
-        )
-      );
-      return res.status(201).json({
-        message: "Profile picture uploaded successfully",
-        photo: restaurant.photo,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Error uploading profile picture" });
-    }
-  }
-);
-
 // POST /api/restaurant/photo/profile-picture
 restaurantRouter.post(
   "/photo/profile-picture",
@@ -215,18 +173,33 @@ restaurantRouter.post(
         return res.status(400).json({ message: "Restaurant id is required" });
       }
 
-      const query = "UPDATE restaurant SET photo = ? WHERE id = ?";
-      connection.query(query, [photo, restaurant?.id], (err) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ message: "Error saving photo in database" });
-        }
-        return res
-          .status(201)
-          .json({ message: "Profile picture uploaded successfully" });
+      const oldRes = await restaurantRepository.findById(restaurant.id);
+      if (oldRes.photo) {
+        try {
+          fs.unlinkSync(
+            path.join(
+              dir,
+              "../../uploads/restaurant_photos/profile_pictures/" + oldRes.photo
+            )
+          );
+        } catch (e) {}
+      }
+
+      oldRes.photo = photo as string;
+      const dbRes = await restaurantRepository.update(oldRes);
+
+      const dishes = await dishRepository.findRestaurantDishes(
+        dbRes.id as number
+      );
+
+      dbRes.dishes = dishes;
+
+      return res.status(201).json({
+        message: "Profile picture uploaded successfully",
+        restaurant: dbRes,
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ message: "Error uploading profile picture" });
     }
   }

@@ -288,6 +288,28 @@ restaurantRouter.get(
   }
 );
 
+// GET api/restaurant/carousel/photo/:name
+restaurantRouter.get(
+  "/carousel/photo/:name",
+  [],
+  async (req: Request, res: Response) => {
+    const name = req.params.name;
+
+    if (!name) {
+      res.status(400).json({ message: "Photo name is required" });
+      return;
+    }
+    try {
+      res.sendFile(
+        path.join(dir, "../../uploads/restaurant_photos/carousel/" + name)
+      );
+    } catch (error) {
+      console.log("errocilo :C");
+      res.status(500).json({ message: "Error finding the photo" });
+    }
+  }
+);
+
 // PUT api/restaurant/
 restaurantRouter.put(
   "/",

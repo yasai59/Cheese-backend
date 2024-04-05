@@ -15,6 +15,7 @@ interface IRestaurantRepository {
   update(restaurant: RestaurantModel): Promise<RestaurantModel>;
   updatePhotoCarousel(restaurantId: number, photos: string[]): Promise<void>;
   findById(restaurantId: number): Promise<RestaurantModel>;
+  getCarouselPhotos(restaurantId: number): Promise<string[]>;
 }
 
 export default class RestaurantRepository implements IRestaurantRepository {
@@ -25,7 +26,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
     const query =
       "INSERT INTO restaurant (name, owner_id, address, phone, photo) VALUES (?, ?, ?, ?, ?)";
     try {
-      const result = await connection
+      const result: any = await connection
         .promise()
         .query(query, [
           restaurant.name,
@@ -34,8 +35,12 @@ export default class RestaurantRepository implements IRestaurantRepository {
           restaurant.phone,
           restaurant.photo,
         ]);
-      const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
-      const restaurantSaved = restaurants[0] as RestaurantModel;
+      const id = result[0].insertId;
+      const querySaves = "SELECT * FROM restaurant WHERE id = ?";
+      const resultSaved = await connection.promise().query(querySaves, [id]);
+      const res: RowDataPacket[] = resultSaved[0] as RowDataPacket[];
+      const restaurantSaved = res[0] as RestaurantModel;
+
       return restaurantSaved;
     } catch (error) {
       console.log(error);
@@ -130,9 +135,10 @@ export default class RestaurantRepository implements IRestaurantRepository {
     }
 
     try {
-      for (const photo of photos) {
-        await connection.promise().query(query, [restaurantId, photo]);
-      }
+      const promises = photos.map((photo) =>
+        connection.promise().query(query, [restaurantId, photo])
+      );
+      await Promise.all(promises);
     } catch (error) {
       console.log(error);
       throw new Error("Error adding photo to carousel");
@@ -186,6 +192,17 @@ export default class RestaurantRepository implements IRestaurantRepository {
       return restaurants[0] as RestaurantModel;
     } catch (error) {
       throw new Error("Error finding restaurant by id");
+    }
+  }
+
+  public async getCarouselPhotos(restaurantId: number): Promise<string[]> {
+    const query = "SELECT * FROM carousel WHERE restaurant_id = ?";
+    try {
+      const result = await connection.promise().query(query, [restaurantId]);
+      const photos: RowDataPacket[] = result[0] as RowDataPacket[];
+      return photos.map((photo) => photo.photo);
+    } catch (error) {
+      throw new Error("Error getting carousel photos");
     }
   }
 }

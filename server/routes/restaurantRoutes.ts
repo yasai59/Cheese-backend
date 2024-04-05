@@ -219,8 +219,9 @@ restaurantRouter.post(
     try {
       restaurant.photo = req.pfp as string;
       const restaurantSaved = await restaurantRepository.save(restaurant, user);
-
       const photos = req.photoName as Array<string>;
+
+      console.log(restaurantSaved);
       if (photos) {
         await restaurantRepository.addPhotoToCarousel(
           restaurantSaved.id as number,
@@ -287,14 +288,14 @@ restaurantRouter.get(
   }
 );
 
-// UPDATE api/restaurant/:restaurantId
+// PUT api/restaurant/
 restaurantRouter.put(
-  "/:restaurantId",
+  "/",
   [verifyJWT, validarCampos],
   async (req: Request, res: Response) => {
     const restaurant: RestaurantModel = req.body;
     if (!restaurant.id) {
-      res.status(500).json({ message: "Restaurant id is required" });
+      res.status(400).json({ message: "Restaurant id is required" });
       return;
     }
     try {
@@ -464,6 +465,23 @@ restaurantRouter.get(
       res.json(restaurant);
     } catch (error) {
       res.status(500).json({ message: "Error finding the restaurant" });
+    }
+  }
+);
+
+restaurantRouter.get(
+  "/carousel/:restaurantId",
+  async (req: Request, res: Response) => {
+    const restaurantId: number = parseInt(req.params.restaurantId);
+    if (!restaurantId) {
+      res.status(400).json({ message: "Restaurant id is required" });
+      return;
+    }
+    try {
+      const photos = await restaurantRepository.getCarouselPhotos(restaurantId);
+      res.json(photos);
+    } catch (error) {
+      res.status(500).json({ message: "Error finding the photos" });
     }
   }
 );

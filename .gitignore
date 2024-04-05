@@ -180,4 +180,6 @@ uploads/restaurant_photos/profile_pictures/*.jpg
 uploads/restaurant_photos/profile_pictures/*.jpeg
 uploads/restaurant_photos/profile_pictures/*.png
 uploads/restaurant_photos/carousel/*.jpg
+uploads/restaurant_photos/carousel/*.jpeg
+uploads/restaurant_photos/carousel/*.png
 uploads/dish_photos/*.jpg

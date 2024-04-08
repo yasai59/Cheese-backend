@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "bun index.ts",
-    "dev": "bun index.ts --watch"
+    "dev": "bun run index.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

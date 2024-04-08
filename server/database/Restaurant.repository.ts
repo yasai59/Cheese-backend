@@ -16,6 +16,7 @@ interface IRestaurantRepository {
   updatePhotoCarousel(restaurantId: number, photos: string[]): Promise<void>;
   findById(restaurantId: number): Promise<RestaurantModel>;
   getCarouselPhotos(restaurantId: number): Promise<string[]>;
+  findAll(): Promise<RestaurantModel[]>;
 }
 
 export default class RestaurantRepository implements IRestaurantRepository {
@@ -203,6 +204,18 @@ export default class RestaurantRepository implements IRestaurantRepository {
       return photos.map((photo) => photo.photo);
     } catch (error) {
       throw new Error("Error getting carousel photos");
+    }
+  }
+
+  public async findAll(): Promise<RestaurantModel[]> {
+    const query = "SELECT * FROM restaurant";
+    try {
+      const result = await connection.promise().query(query);
+      const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
+      return restaurants as RestaurantModel[];
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error finding restaurants");
     }
   }
 }

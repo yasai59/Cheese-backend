@@ -2,26 +2,20 @@ import express, { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import { check } from "express-validator";
 import { validarCampos } from "../helpers/verifyFields";
-import RestaurantRepository from "../database/Restaurant.repository";
-import type RestaurantModel from "../models/Restaurant.model";
-import type User from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import connection from "../database/connection";
 import fs from "fs";
-import DishRepository from "../database/Dish.repository";
 import { verifyProperty } from "../middlewares/verifyProperty";
+import { verifyRole } from "../middlewares/verifyRole";
+import restaurantController from "../controllers/restaurantController";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
   pfp?: string;
 }
-
-const restaurantRepository = new RestaurantRepository();
-
-const dishRepository = new DishRepository();
 
 const restaurantRouter: Router = express.Router();
 
@@ -100,412 +94,568 @@ const uploadCarousel = multer({ storage: storageCarousel });
 const uploadProfilePicture = multer({ storage: storageProfilePicture });
 const upload = multer({ storage: storage });
 
-// POST /api/restaurant/photo/carousel
+/**
+ * @swagger
+ * tags:
+ *   name: Restaurant
+ *   description: Restaurant management
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RestaurantModel:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: ID of the restaurant
+ *         owner_id:
+ *           type: integer
+ *           description: ID of the owner
+ *         name:
+ *           type: string
+ *           description: Name of the restaurant
+ *         address:
+ *           type: string
+ *           description: Address of the restaurant
+ *         creation_date:
+ *           type: string
+ *           format: date-time
+ *           description: Date of creation
+ *         link_glovo:
+ *           type: string
+ *           description: Link to Glovo page
+ *         link_just_eat:
+ *           type: string
+ *           description: Link to Just Eat page
+ *         link_uber_eats:
+ *           type: string
+ *           description: Link to Uber Eats page
+ *         phone:
+ *           type: string
+ *           description: Phone number of the restaurant
+ *         photo:
+ *           type: string
+ *           description: URL of the restaurant's photo
+ *         description:
+ *           type: string
+ *           description: Description of the restaurant
+ *       required:
+ *         - name
+ */
+
+/**
+ * @swagger
+ * /api/restaurant/photo/carousel:
+ *   post:
+ *     tags:
+ *      - Restaurant
+ *     summary: Upload carousel photos for a restaurant
+ *     description: Upload carousel photos for a specified restaurant.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               id:
+ *                 type: integer
+ *                 description: ID of the restaurant
+ *     responses:
+ *       '200':
+ *         description: Photos uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restaurantCarousel:
+ *                   $ref: '#/components/schemas/RestaurantModel'
+ *       '400':
+ *         description: Invalid input data
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.post(
   "/photo/carousel",
   [verifyJWT, uploadCarousel.array("photo", 12)],
-  async (req: PhotoRequest, res: Response) => {
-    try {
-      const photos = req.photoName as Array<string>;
-      if (!photos) {
-        return res.status(400).json({ message: "No files uploaded" });
-      }
-      const restaurant = req.body as RestaurantModel;
-      if (!restaurant.id) {
-        return res.status(400).json({ message: "Restaurant id is required" });
-      }
-
-      const restaurantCarousel = await restaurantRepository.addPhotoToCarousel(
-        restaurant.id,
-        photos
-      );
-      return res.json({
-        message: "Photos uploaded successfully",
-        restaurantCarousel,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error uploading photos" });
-    }
-  }
+  restaurantController.uploadCarouselPhotos
 );
 
-// UPDATE api/restaurant/photo/carousel/:restaurantId
+/**
+ * @swagger
+ * /api/restaurant/photo/carousel/{restaurantId}:
+ *   put:
+ *     tags:
+ *      - Restaurant
+ *     summary: Update carousel photos for a restaurant
+ *     description: Update carousel photos for a specified restaurant.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       '200':
+ *         description: Restaurant carousel updated successfully
+ *       '400':
+ *         description: Invalid input data
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.put(
   "/photo/carousel/:restaurantId",
   [verifyJWT, uploadCarousel.array("photo", 12)],
-  async (req: PhotoRequest, res: Response) => {
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    const photos = req.photoName as Array<string>;
-    if (!restaurantId) {
-      res.status(500).json({ message: "Restaurant id is required" });
-      return;
-    }
-    if (!photos) {
-      res.status(500).json({ message: "No photos to update" });
-      return;
-    }
-    try {
-      await restaurantRepository.updatePhotoCarousel(restaurantId, photos);
-      res
-        .status(200)
-        .json({ message: "Restaurant carousel updated successfully" });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error updating the restaurant carousel" });
-    }
-  }
+  restaurantController.updateCarouselPhotos
 );
 
-// POST /api/restaurant/photo/profile-picture
+/**
+ * @swagger
+ * /api/restaurant/photo/profile-picture:
+ *   post:
+ *     tags:
+ *      - Restaurant
+ *     summary: Upload profile picture for a restaurant
+ *     description: Upload profile picture for a specified restaurant.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               photo:
+ *                 type: string
+ *                 format: binary
+ *               id:
+ *                 type: integer
+ *                 description: ID of the restaurant
+ *     responses:
+ *       '201':
+ *         description: Profile picture uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restaurant:
+ *                   $ref: '#/components/schemas/RestaurantModel'
+ *       '400':
+ *         description: Invalid input data
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.post(
   "/photo/profile-picture",
   [verifyJWT, uploadProfilePicture.single("photo")],
-  async (req: PhotoRequest, res: Response) => {
-    try {
-      const photo = req.photoName;
-      let restaurant = req.body as RestaurantModel;
-      if (!photo) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-      if (!restaurant.id) {
-        return res.status(400).json({ message: "Restaurant id is required" });
-      }
-
-      const oldRes = await restaurantRepository.findById(restaurant.id);
-      if (oldRes.photo) {
-        try {
-          fs.unlinkSync(
-            path.join(
-              dir,
-              "../../uploads/restaurant_photos/profile_pictures/" + oldRes.photo
-            )
-          );
-        } catch (e) {}
-      }
-
-      oldRes.photo = photo as string;
-      const dbRes = await restaurantRepository.update(oldRes);
-
-      const dishes = await dishRepository.findRestaurantDishes(
-        dbRes.id as number
-      );
-
-      dbRes.dishes = dishes;
-
-      return res.status(201).json({
-        message: "Profile picture uploaded successfully",
-        restaurant: dbRes,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error uploading profile picture" });
-    }
-  }
+  restaurantController.uploadProfilePicture
 );
 
-// POST api/restaurant
+/**
+ * @swagger
+ * /api/restaurant:
+ *   post:
+ *     tags:
+ *      - Restaurant
+ *     summary: Create a new restaurant
+ *     description: Create a new restaurant.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             $ref: '#/components/schemas/RestaurantModel'
+ *     responses:
+ *       '201':
+ *         description: Restaurant created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restaurantSaved:
+ *                   $ref: '#/components/schemas/RestaurantModel'
+ *       '400':
+ *         description: Invalid input data
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.post(
   "/",
   [verifyJWT, upload.any(), validarCampos],
-  async (req: PhotoRequest, res: Response) => {
-    let restaurant: RestaurantModel = req.body;
-    const user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    try {
-      restaurant.photo = req.pfp as string;
-      const restaurantSaved = await restaurantRepository.save(restaurant, user);
-      const photos = req.photoName as Array<string>;
-
-      console.log(restaurantSaved);
-      if (photos) {
-        await restaurantRepository.addPhotoToCarousel(
-          restaurantSaved.id as number,
-          photos
-        );
-      }
-      res.status(201).json({
-        message: "Restaurant created successfully",
-        restaurantSaved,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error creating the restaurant" });
-    }
-  }
+  restaurantController.createRestaurant
 );
 
-// GET api/restaurant
-restaurantRouter.get("/", [verifyJWT], async (req: Request, res: Response) => {
-  const user: User = req.user as User;
-  try {
-    const restaurants = await restaurantRepository.findByOwner(user);
+/**
+ * @swagger
+ * /api/restaurant:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get restaurants by owner
+ *     description: Retrieve all restaurants owned by the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of restaurants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RestaurantModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+restaurantRouter.get(
+  "/",
+  [verifyJWT],
+  restaurantController.getRestaurantsByOwner
+);
 
-    const promises = restaurants.map(async (restaurant) => {
-      // add the dishes to the restaurant
-      const dishes = await dishRepository.findRestaurantDishes(
-        restaurant.id as number
-      );
-      return { ...restaurant, dishes };
-    });
-
-    const restaurantsWithDishes = await Promise.all(promises);
-
-    console.log(restaurantsWithDishes);
-
-    res.status(200).json(restaurantsWithDishes);
-  } catch (error) {
-    res.status(500).json({ message: "Error finding restaurants by owner" });
-  }
-});
-
-// GET api/restaurant/profilephoto/:name
+/**
+ * @swagger
+ * /api/restaurant/profilephoto/{name}:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get restaurant profile photo
+ *     description: Get the profile photo of a restaurant by its filename.
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: Filename of the profile photo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The restaurant profile photo
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.get(
   "/profilephoto/:name",
   [],
-  async (req: Request, res: Response) => {
-    const name = req.params.name;
-
-    if (!name) {
-      res.status(400).json({ message: "Photo name is required" });
-      return;
-    }
-    try {
-      res.sendFile(
-        path.join(
-          dir,
-          "../../uploads/restaurant_photos/profile_pictures/" + name
-        )
-      );
-    } catch (error) {
-      console.log("errocilo :C");
-      res.status(500).json({ message: "Error finding the photo" });
-    }
-  }
+  restaurantController.getProfilePhoto
 );
 
-// GET api/restaurant/carousel/photo/:name
+/**
+ * @swagger
+ * /api/restaurant/carousel/photo/{name}:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get restaurant carousel photo
+ *     description: Get a carousel photo of a restaurant by its filename.
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         description: Filename of the carousel photo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The restaurant carousel photo
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.get(
   "/carousel/photo/:name",
   [],
-  async (req: Request, res: Response) => {
-    const name = req.params.name;
-
-    if (!name) {
-      res.status(400).json({ message: "Photo name is required" });
-      return;
-    }
-    try {
-      res.sendFile(
-        path.join(dir, "../../uploads/restaurant_photos/carousel/" + name)
-      );
-    } catch (error) {
-      console.log("errocilo :C");
-      res.status(500).json({ message: "Error finding the photo" });
-    }
-  }
+  restaurantController.getCarouselPhoto
 );
 
-// PUT api/restaurant/
+/**
+ * @swagger
+ * /api/restaurant:
+ *   put:
+ *     tags:
+ *      - Restaurant
+ *     summary: Update a restaurant
+ *     description: Update an existing restaurant.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RestaurantModel'
+ *     responses:
+ *       '200':
+ *         description: Restaurant updated successfully
+ *       '400':
+ *         description: Invalid input data
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.put(
   "/",
   [verifyJWT, validarCampos],
-  async (req: Request, res: Response) => {
-    const restaurant: RestaurantModel = req.body;
-    if (!restaurant.id) {
-      res.status(400).json({ message: "Restaurant id is required" });
-      return;
-    }
-    try {
-      const restaurantUpdated = await restaurantRepository.update(restaurant);
-      res.status(200).json({
-        message: "Restaurant updated successfully",
-        restaurantUpdated,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Error updating the restaurant" });
-    }
-  }
+  restaurantController.updateRestaurant
 );
 
-// DELETE api/restaurant/:restaurantId
+/**
+ * @swagger
+ * /api/restaurant/{restaurantId}:
+ *   delete:
+ *     tags:
+ *      - Restaurant
+ *     summary: Delete a restaurant
+ *     description: Delete an existing restaurant by its ID.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Restaurant deleted successfully
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.delete(
   "/:restaurantId",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    if (!restaurantId) {
-      res.status(500).json({ message: "Restaurant id is required" });
-      return;
-    }
-    try {
-      await restaurantRepository.delete(restaurantId);
-      res.status(200).json({ message: "Restaurant deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Error deleting the restaurant" });
-    }
-  }
+  restaurantController.deleteRestaurant
 );
 
-// GET api/restaurant/favorite-restaurants
+/**
+ * @swagger
+ * /api/restaurant/favorite-restaurants:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get favorite restaurants
+ *     description: Retrieve all favorite restaurants of the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of favorite restaurants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RestaurantModel'
+ *       '404':
+ *         description: No favorite restaurants found
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.get(
   "/favorite-restaurants",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    try {
-      const favoriteRestaurants =
-        await restaurantRepository.findFavoriteRestaurants(user);
-      if (favoriteRestaurants.length === 0) {
-        res.status(404).json({ message: "No favorite restaurants found" });
-      }
-      res.status(200).json(favoriteRestaurants);
-    } catch (error) {
-      console.log(error);
-      res
-        .status(500)
-        .json({ message: "Error finding favorite restaurants by user" });
-    }
-  }
+  restaurantController.getFavoriteRestaurants
 );
 
-// POST api/restaurant/favorite-restaurant/:restaurantId
+/**
+ * @swagger
+ * /api/restaurant/favorite-restaurant/{restaurantId}:
+ *   post:
+ *     tags:
+ *      - Restaurant
+ *     summary: Add restaurant to favorites
+ *     description: Add a restaurant to the user's list of favorite restaurants.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Favorite restaurant added successfully
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.post(
   "/favorite-restaurant/:restaurantId",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const user: User | undefined = req.user;
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    if (!restaurantId) {
-      res.status(500).json({ message: "Restaurant id is required" });
-      return;
-    }
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    try {
-      await restaurantRepository.addFavoriteRestaurant(user, restaurantId);
-      res
-        .status(200)
-        .json({ message: "Favorite restaurant added successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Error adding favorite restaurant" });
-    }
-  }
+  restaurantController.addFavoriteRestaurant
 );
 
-// GET api/restaurant/liked-restaurants
+/**
+ * @swagger
+ * /api/restaurant/liked-restaurants:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get liked restaurants
+ *     description: Retrieve all liked restaurants of the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of liked restaurants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RestaurantModel'
+ *       '404':
+ *         description: No liked restaurants found
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.get(
   "/liked-restaurants",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    let user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    try {
-      let likedRestaurants = await restaurantRepository.findLikedRestaurants(
-        user
-      );
-      if (likedRestaurants.length === 0) {
-        res.status(404).json({ message: "No liked restaurants found" });
-      }
-      res.status(200).json(likedRestaurants);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ message: "Error finding liked restaurants by user" });
-    }
-  }
+  restaurantController.getLikedRestaurants
 );
 
-// POST api/restaurant/liked-restaurant/:restaurantId
+/**
+ * @swagger
+ * /api/restaurant/like-restaurant/{restaurantId}:
+ *   post:
+ *     tags:
+ *      - Restaurant
+ *     summary: Like a restaurant
+ *     description: Like a restaurant as the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: Restaurant liked successfully
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.post(
-  "/liked-restaurant/:restaurantId",
+  "/like-restaurant/:restaurantId",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const user: User | undefined = req.user;
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    if (!restaurantId) {
-      res.status(500).json({ message: "Restaurant id is required" });
-      return;
-    }
-    try {
-      await restaurantRepository.addLikedRestaurant(user, restaurantId);
-      res.status(200).json({ message: "Liked restaurant added successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Error adding liked restaurant" });
-    }
-  }
+  restaurantController.addLikedRestaurant
 );
 
-// GET api/restaurant/:owner_id
+/**
+ * @swagger
+ * /api/restaurant/getAll:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get all restaurants
+ *     description: Retrieve all restaurants available in the application.
+ *     responses:
+ *       '200':
+ *         description: A list of restaurants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RestaurantModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 restaurantRouter.get(
-  "/:owner_id",
-  [verifyJWT],
-  async (req: Request, res: Response) => {
-    const user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    const owner_id = user.user_id;
-    try {
-      const restaurants = await restaurantRepository.findByOwner(owner_id);
-      res.status(200).json(restaurants);
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error finding restaurants by owner" });
-    }
-  }
-);
-
-restaurantRouter.get(
-  "/specific/:restaurantId",
-  async (req: Request, res: Response) => {
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    if (!restaurantId) {
-      res.status(400).json({ message: "Restaurant id is required" });
-      return;
-    }
-    try {
-      const restaurant = await restaurantRepository.findById(restaurantId);
-      res.json(restaurant);
-    } catch (error) {
-      res.status(500).json({ message: "Error finding the restaurant" });
-    }
-  }
-);
-
-restaurantRouter.get(
-  "/carousel/:restaurantId",
-  async (req: Request, res: Response) => {
-    const restaurantId: number = parseInt(req.params.restaurantId);
-    if (!restaurantId) {
-      res.status(400).json({ message: "Restaurant id is required" });
-      return;
-    }
-    try {
-      const photos = await restaurantRepository.getCarouselPhotos(restaurantId);
-      res.json(photos);
-    } catch (error) {
-      res.status(500).json({ message: "Error finding the photos" });
-    }
-  }
+  "/getAll",
+  [verifyJWT, verifyRole(3)],
+  restaurantController.getRestaurants
 );
 
 export default restaurantRouter;

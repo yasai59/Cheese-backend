@@ -22,7 +22,7 @@ const options = {
     ],
   },
   // looks for configuration in specified directories
-  apis: ["../routes/*.ts"],
+  apis: ["./server/routes/*.ts"],
 };
 const swaggerSpec = swaggerJsdoc(options);
 function swaggerDocs(app, port) {

@@ -6,7 +6,6 @@ import { verifyJWT } from "../middlewares/verifyJWT";
 import { verifyProperty } from "../middlewares/verifyProperty";
 import multer from "multer";
 import path from "path";
-import { check } from "express-validator";
 import { v4 as uuidv4 } from "uuid";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
@@ -32,7 +31,31 @@ const upload = multer({ storage });
 const dishRepository = new DishRepository();
 const dishRouter: Router = express.Router();
 
-// GET /dish/:restaurantId
+/**
+ * @swagger
+ * /api/dish/{restaurantId}:
+ *   get:
+ *     summary: Get dishes by restaurant ID
+ *     description: Retrieve all dishes for a given restaurant ID.
+ *     parameters:
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '200':
+ *         description: A list of dishes for the restaurant
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/DishModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 dishRouter.get(
   "/:restaurantId",
   [verifyJWT, verifyProperty],
@@ -47,15 +70,40 @@ dishRouter.get(
   }
 );
 
-// POST /dish/:restaurantId
+/**
+ * @swagger
+ * /api/dish/{restaurantId}:
+ *   post:
+ *     summary: Create a new dish
+ *     description: Create a new dish for the specified restaurant.
+ *     parameters:
+ *       - in: path
+ *         name: restaurantId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DishModel'
+ *     responses:
+ *       '201':
+ *         description: The created dish
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DishModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 dishRouter.post(
   "/:restaurantId",
   [verifyJWT, verifyProperty, upload.single("photo")],
   async (req: Request, res: Response) => {
     const restaurantId = Number(req.params.restaurantId);
-
-    console.log(restaurantId);
-
     const dish = req.body as DishModel;
     try {
       const dishSaved = await dishRepository.addDish(restaurantId, dish);
@@ -66,7 +114,35 @@ dishRouter.post(
   }
 );
 
-// PUT /dish/:dishId
+/**
+ * @swagger
+ * /api/dish/{dishId}:
+ *   put:
+ *     summary: Update a dish
+ *     description: Update an existing dish.
+ *     parameters:
+ *       - in: path
+ *         name: dishId
+ *         required: true
+ *         description: ID of the dish to update
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/DishModel'
+ *     responses:
+ *       '200':
+ *         description: The updated dish
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DishModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 dishRouter.put(
   "/:dishId",
   [verifyJWT, verifyProperty],
@@ -81,7 +157,25 @@ dishRouter.put(
   }
 );
 
-// DELETE /dish/:dishId
+/**
+ * @swagger
+ * /api/dish/{dishId}:
+ *   delete:
+ *     summary: Delete a dish
+ *     description: Delete a dish by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: dishId
+ *         required: true
+ *         description: ID of the dish to delete
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       '204':
+ *         description: Dish deleted successfully
+ *       '500':
+ *         description: Internal Server Error
+ */
 dishRouter.delete(
   "/:dishId",
   [verifyJWT, verifyProperty],
@@ -96,10 +190,27 @@ dishRouter.delete(
   }
 );
 
-// GET /dish/photo/:photo
+/**
+ * @swagger
+ * /api/dish/photo/{photo}:
+ *   get:
+ *     summary: Get dish photo
+ *     description: Get the photo of a dish by its filename.
+ *     parameters:
+ *       - in: path
+ *         name: photo
+ *         required: true
+ *         description: Filename of the dish photo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: The dish photo
+ *       '500':
+ *         description: Internal Server Error
+ */
 dishRouter.get("/photo/:photo", async (req: Request, res: Response) => {
   const photo = req.params.photo;
-
   try {
     res.sendFile(path.join(dir, "../../uploads/dish_photos/", photo));
   } catch (error) {

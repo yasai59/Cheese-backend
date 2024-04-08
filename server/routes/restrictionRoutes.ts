@@ -1,120 +1,263 @@
 import express, { Router } from "express";
-import type { Request, Response } from "express";
-
-import RestrictionRepository from "../database/Restriction.repository";
-import type RestrictionModel from "../models/Restriction.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
-
-const restrictionRepository = new RestrictionRepository();
+import restrictionController from "../controllers/restrictionController";
 
 const restrictionRouter: Router = express.Router();
 
-// GET /api/restriction/:userId
-restrictionRouter.get("/", [verifyJWT], async (req: Request, res: Response) => {
-  const userId: number = req.user?.id as number;
-  let restrictions: RestrictionModel[];
-  try {
-    restrictions = await restrictionRepository.findUserRestrictions(userId);
-    return res.json({
-      message: "User restrictions found",
-      restrictions,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: "Error finding user restrictions",
-    });
-  }
-});
+/**
+ * @swagger
+ * tags:
+ *   name: Restriction
+ *   description: Restriction management
+ */
 
-// GET /api/restriction/all
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RestrictionModel:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: The ID of the restriction.
+ *         name:
+ *           type: string
+ *           description: The name of the restriction.
+ *       required:
+ *         - name
+ */
+
+/**
+ * @swagger
+ * /api/restriction:
+ *   get:
+ *     tags:
+ *       - Restriction
+ *     summary: Get user restrictions
+ *     description: Retrieve all restrictions associated with the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of user restrictions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restrictions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/RestrictionModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+restrictionRouter.get(
+  "/",
+  [verifyJWT],
+  restrictionController.getUserRestrictions
+);
+
+/**
+ * @swagger
+ * /api/restriction/all:
+ *   get:
+ *     tags:
+ *       - Restriction
+ *     summary: Get all restrictions
+ *     description: Retrieve all restrictions available in the application.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of all restrictions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restrictions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/RestrictionModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 restrictionRouter.get(
   "/all",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    let restrictions: RestrictionModel[];
-    try {
-      restrictions = await restrictionRepository.findAll();
-      return res.json({
-        message: "All restrictions found",
-        restrictions,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        message: "Error finding all restrictions",
-      });
-    }
-  }
+  restrictionController.getAllRestrictions
 );
 
-// POST /api/restriction/:userId
+/**
+ * @swagger
+ * /api/restriction:
+ *   post:
+ *     tags:
+ *       - Restriction
+ *     summary: Add restrictions to user
+ *     description: Add multiple restrictions to the authenticated user.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               restrictions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: ID of the restriction
+ *     responses:
+ *       '200':
+ *         description: Restrictions added to user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 userRestrictions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/RestrictionModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 restrictionRouter.post(
   "/",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const userId: number = req.user?.id as number;
-    const { restrictions } = req.body;
-    let userRestrictions: RestrictionModel[];
-    try {
-      userRestrictions = await restrictionRepository.addRestrictionsToUser(
-        userId,
-        restrictions
-      );
-      return res.json({
-        message: "Restrictions added to user",
-        userRestrictions,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error adding restrictions to user",
-      });
-    }
-  }
+  restrictionController.addRestrictionsToUser
 );
 
-// GET /api/restriction/dish/:dishId
+/**
+ * @swagger
+ * /api/restriction/dish/{dishId}:
+ *   get:
+ *     tags:
+ *       - Restriction
+ *     summary: Get dish restrictions
+ *     description: Retrieve all restrictions associated with a specific dish.
+ *     parameters:
+ *       - in: path
+ *         name: dishId
+ *         required: true
+ *         description: ID of the dish
+ *         schema:
+ *           type: integer
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: A list of dish restrictions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 restrictions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/RestrictionModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 restrictionRouter.get(
   "/dish/:dishId",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const dishId: number = Number(req.params.dishId);
-    let restrictions: RestrictionModel[];
-    try {
-      restrictions = await restrictionRepository.findDishRestrictions(dishId);
-      return res.json({
-        message: "Dish restrictions found",
-        restrictions,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error finding dish restrictions",
-      });
-    }
-  }
+  restrictionController.getDishRestrictions
 );
 
-// POST /api/restriction/dish/:dishId
+/**
+ * @swagger
+ * /api/restriction/dish/{dishId}:
+ *   post:
+ *     tags:
+ *       - Restriction
+ *     summary: Add restrictions to dish
+ *     description: Add multiple restrictions to a specific dish.
+ *     parameters:
+ *       - in: path
+ *         name: dishId
+ *         required: true
+ *         description: ID of the dish
+ *         schema:
+ *           type: integer
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         description: Bearer token
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               restrictions:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: ID of the restriction
+ *     responses:
+ *       '200':
+ *         description: Restrictions added to dish
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 dishRestrictions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/RestrictionModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
 restrictionRouter.post(
   "/dish/:dishId",
   [verifyJWT],
-  async (req: Request, res: Response) => {
-    const dishId: number = Number(req.params.dishId);
-    const { restrictions } = req.body;
-    let dishRestrictions: RestrictionModel[];
-    try {
-      dishRestrictions = await restrictionRepository.addRestrictionsToDish(
-        dishId,
-        restrictions
-      );
-      return res.json({
-        message: "Restrictions added to dish",
-        dishRestrictions,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message: "Error adding restrictions to dish",
-      });
-    }
-  });
+  restrictionController.addRestrictionsToDish
+);
 
 export default restrictionRouter;

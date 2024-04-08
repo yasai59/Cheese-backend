@@ -7,6 +7,7 @@ import tasteRouter from "../routes/tasteRoutes";
 import restrictionRouter from "../routes/restrictionRoutes";
 import restaurantRouter from "../routes/restaurantRoutes";
 import dishRouter from "../routes/dishRoutes";
+import swaggerDocs from "./swagger";
 
 export class Server {
   private app: express.Application;
@@ -30,6 +31,7 @@ export class Server {
 
   // midlewares
   private middlewares(): void {
+    swaggerDocs(this.app);
     this.app.use(express.json());
     this.app.use(
       express.urlencoded({

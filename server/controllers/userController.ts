@@ -51,7 +51,9 @@ class UserController {
     // extract the user and save to the database
     let user: UserModel = req.body;
     user.role_id = user.role_id === 1 ? 1 : 2;
-    user.password = await Bun.password.hash(user.password as string);
+    user.password = await Bun.password.hash(user.password as string, {
+      algorithm: "bcrypt",
+    });
     let dbUser: UserModel;
     try {
       dbUser = await userRepository.save(user);
@@ -146,6 +148,12 @@ class UserController {
   async updateUser(req: Request, res: Response) {
     const reqUser = req.user as UserModel;
     let user: UserModel = req.body;
+
+    user = {
+      ...reqUser,
+      ...user,
+    };
+
     user.id = reqUser.id;
 
     user.role_id = user.role_id === 1 ? 1 : 2;
@@ -153,6 +161,8 @@ class UserController {
     try {
       const userDb = await userRepository.update(user);
       if (!userDb) throw new Error("Error updating the user");
+
+      delete userDb.password;
       return res.json({
         message: "User updated successfully",
         userDb,

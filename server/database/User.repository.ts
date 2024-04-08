@@ -78,7 +78,9 @@ export default class UserRepository implements IUserRepository {
         campos = [
           user.username,
           user.email,
-          await Bun.password.hash(user.password as string),
+          await Bun.password.hash(user.password as string, {
+            algorithm: "bcrypt",
+          }),
           user.role_id,
           user.lot_number,
           user.photo,

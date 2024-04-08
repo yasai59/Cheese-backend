@@ -1,6 +1,5 @@
 import UserRepository from "../database/User.repository";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import path from "path";
 import fs from "fs";
 
@@ -52,7 +51,7 @@ class UserController {
     // extract the user and save to the database
     let user: UserModel = req.body;
     user.role_id = user.role_id === 1 ? 1 : 2;
-    user.password = bcrypt.hashSync(user.password ?? "", 10);
+    user.password = await Bun.password.hash(user.password as string);
     let dbUser: UserModel;
     try {
       dbUser = await userRepository.save(user);
@@ -122,7 +121,7 @@ class UserController {
       });
     }
 
-    if (!bcrypt.compareSync(password, dbUser.password ?? "")) {
+    if (!Bun.password.verifySync(password, dbUser.password ?? "")) {
       return res.status(400).json({
         message: "Username or password are invalid",
       });
@@ -323,7 +322,7 @@ class UserController {
       });
     }
 
-    if (!bcrypt.compareSync(oldPassword, user.password as string)) {
+    if (!Bun.password.verifySync(oldPassword, user.password as string)) {
       return res.status(400).json({
         message: "Old password is invalid",
       });

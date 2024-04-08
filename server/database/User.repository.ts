@@ -1,7 +1,6 @@
 import connection from "./connection";
 import type UserModel from "../models/User.model";
 import type { RowDataPacket } from "mysql2";
-import bcrypt from "bcrypt";
 
 interface IUserRepository {
   save(user: UserModel): Promise<UserModel>;
@@ -79,7 +78,7 @@ export default class UserRepository implements IUserRepository {
         campos = [
           user.username,
           user.email,
-          bcrypt.hashSync(user.password as string, 10),
+          Bun.password.hashSync(user.password as string),
           user.role_id,
           user.lot_number,
           user.photo,
@@ -180,7 +179,9 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
-  public async getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel> {
+  public async getAllInfoUserFromOtherTables(
+    user: UserModel
+  ): Promise<UserModel> {
     let subQueryUserRestaurants = `
     SELECT JSON_ARRAYAGG(JSON_OBJECT('id', rest.id, 'name', rest.name, 'address', rest.address, 'phone', rest.phone, 'photo', rest.photo))
     FROM restaurant rest
@@ -247,7 +248,4 @@ export default class UserRepository implements IUserRepository {
       throw new Error("Error getting info from user");
     }
   }
-
-
-
 }

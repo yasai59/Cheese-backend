@@ -288,8 +288,12 @@ class UserController {
 
     try {
       await userRepository.update(user);
+      console.log("it's been so long");
       await userRepository.saveAction(user, null, null);
+      console.log("since last I've seen my son");
     } catch (error) {
+      console.log(error);
+      console.log("lost to this monster");
       return res.status(500).json({
         message: "Error updating the password",
       });

@@ -62,7 +62,9 @@ export default class RestrictionRepository implements IRestrictionRepository {
     }
   }
 
-  public async findDishRestrictions(dishId: number): Promise<RestrictionModel[]> {
+  public async findDishRestrictions(
+    dishId: number
+  ): Promise<RestrictionModel[]> {
     const query =
       "SELECT r.name, r.id FROM restriction r JOIN dish_restriction dr ON r.id = dr.restriction_id WHERE dr.dish_id = ?";
     try {
@@ -74,15 +76,21 @@ export default class RestrictionRepository implements IRestrictionRepository {
     }
   }
 
-  public async addRestrictionsToDish(dishId: number, restrictions: number[]): Promise<RestrictionModel[]> {
-    const query = "INSERT INTO dish_restriction (dish_id, restriction_id) VALUES (?, ?)";
+  public async addRestrictionsToDish(
+    dishId: number,
+    restrictions: number[]
+  ): Promise<RestrictionModel[]> {
+    const query =
+      "INSERT INTO dish_restriction (dish_id, restriction_id) VALUES (?, ?)";
     try {
-      await connection.promise().query("DELETE FROM dish_restriction WHERE dish_id = ?", [dishId]);
+      await connection
+        .promise()
+        .query("DELETE FROM dish_restriction WHERE dish_id = ?", [dishId]);
       for (const restriction of restrictions) {
         await connection.promise().query(query, [dishId, restriction]);
       }
       return await this.findDishRestrictions(dishId);
-    } catch (error) { 
+    } catch (error) {
       throw new Error("Error adding restrictions to dish");
     }
   }

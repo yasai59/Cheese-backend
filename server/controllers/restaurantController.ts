@@ -1,20 +1,19 @@
 import type { Request, Response } from "express";
-import RestaurantRepository from "../database/Restaurant.repository";
 import DishRepository from "../database/Dish.repository";
 import fs from "fs";
 import path from "path";
 import type RestaurantModel from "../models/Restaurant.model";
 import type User from "../models/User.model";
+import RestaurantRepository from "../database/Restaurant.repository";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
   pfp?: string;
 }
+const restaurantRepository = new RestaurantRepository();
+const dishRepository = new DishRepository();
 
 class RestaurantController {
-  private restaurantRepository = new RestaurantRepository();
-  private dishRepository = new DishRepository();
-
   async uploadCarouselPhotos(req: PhotoRequest, res: Response) {
     try {
       const photos = req.photoName as Array<string>;
@@ -26,11 +25,10 @@ class RestaurantController {
         return res.status(400).json({ message: "Restaurant id is required" });
       }
 
-      const restaurantCarousel =
-        await this.restaurantRepository.addPhotoToCarousel(
-          restaurant.id,
-          photos
-        );
+      const restaurantCarousel = await restaurantRepository.addPhotoToCarousel(
+        restaurant.id,
+        photos
+      );
       return res.json({
         message: "Photos uploaded successfully",
         restaurantCarousel,
@@ -53,7 +51,7 @@ class RestaurantController {
       return;
     }
     try {
-      await this.restaurantRepository.updatePhotoCarousel(restaurantId, photos);
+      await restaurantRepository.updatePhotoCarousel(restaurantId, photos);
       res
         .status(200)
         .json({ message: "Restaurant carousel updated successfully" });
@@ -75,7 +73,7 @@ class RestaurantController {
         return res.status(400).json({ message: "Restaurant id is required" });
       }
 
-      const oldRes = await this.restaurantRepository.findById(restaurant.id);
+      const oldRes = await restaurantRepository.findById(restaurant.id);
       if (oldRes.photo) {
         try {
           fs.unlinkSync(
@@ -90,9 +88,9 @@ class RestaurantController {
       }
 
       oldRes.photo = photo as string;
-      const dbRes = await this.restaurantRepository.update(oldRes);
+      const dbRes = await restaurantRepository.update(oldRes);
 
-      const dishes = await this.dishRepository.findRestaurantDishes(
+      const dishes = await dishRepository.findRestaurantDishes(
         dbRes.id as number
       );
 
@@ -117,14 +115,11 @@ class RestaurantController {
     }
     try {
       restaurant.photo = req.pfp as string;
-      const restaurantSaved = await this.restaurantRepository.save(
-        restaurant,
-        user
-      );
+      const restaurantSaved = await restaurantRepository.save(restaurant, user);
       const photos = req.photoName as Array<string>;
 
       if (photos) {
-        await this.restaurantRepository.addPhotoToCarousel(
+        await restaurantRepository.addPhotoToCarousel(
           restaurantSaved.id as number,
           photos
         );
@@ -142,11 +137,11 @@ class RestaurantController {
   async getRestaurants(req: Request, res: Response) {
     const user: User = req.user as User;
     try {
-      const restaurants = await this.restaurantRepository.findByOwner(user);
+      const restaurants = await restaurantRepository.findByOwner(user);
 
       const promises = restaurants.map(async (restaurant) => {
         // add the dishes to the restaurant
-        const dishes = await this.dishRepository.findRestaurantDishes(
+        const dishes = await dishRepository.findRestaurantDishes(
           restaurant.id as number
         );
         return { ...restaurant, dishes };
@@ -204,9 +199,7 @@ class RestaurantController {
       return;
     }
     try {
-      const restaurantUpdated = await this.restaurantRepository.update(
-        restaurant
-      );
+      const restaurantUpdated = await restaurantRepository.update(restaurant);
       res.status(200).json({
         message: "Restaurant updated successfully",
         restaurantUpdated,
@@ -223,7 +216,7 @@ class RestaurantController {
       return;
     }
     try {
-      await this.restaurantRepository.delete(restaurantId);
+      await restaurantRepository.delete(restaurantId);
       res.status(200).json({ message: "Restaurant deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Error deleting the restaurant" });
@@ -238,7 +231,7 @@ class RestaurantController {
     }
     try {
       const favoriteRestaurants =
-        await this.restaurantRepository.findFavoriteRestaurants(user);
+        await restaurantRepository.findFavoriteRestaurants(user);
       if (favoriteRestaurants.length === 0) {
         res.status(404).json({ message: "No favorite restaurants found" });
       }
@@ -263,7 +256,7 @@ class RestaurantController {
       return;
     }
     try {
-      await this.restaurantRepository.addFavoriteRestaurant(user, restaurantId);
+      await restaurantRepository.addFavoriteRestaurant(user, restaurantId);
       res
         .status(200)
         .json({ message: "Favorite restaurant added successfully" });
@@ -279,8 +272,9 @@ class RestaurantController {
       return;
     }
     try {
-      let likedRestaurants =
-        await this.restaurantRepository.findLikedRestaurants(user);
+      let likedRestaurants = await restaurantRepository.findLikedRestaurants(
+        user
+      );
       if (likedRestaurants.length === 0) {
         res.status(404).json({ message: "No liked restaurants found" });
       }
@@ -304,7 +298,7 @@ class RestaurantController {
       return;
     }
     try {
-      await this.restaurantRepository.addLikedRestaurant(user, restaurantId);
+      await restaurantRepository.addLikedRestaurant(user, restaurantId);
       res.status(200).json({ message: "Liked restaurant added successfully" });
     } catch (error) {
       res.status(500).json({ message: "Error adding liked restaurant" });
@@ -319,7 +313,7 @@ class RestaurantController {
     }
     const owner_id = user.user_id;
     try {
-      const restaurants = await this.restaurantRepository.findByOwner(owner_id);
+      const restaurants = await restaurantRepository.findByOwner(owner_id);
       res.status(200).json(restaurants);
     } catch (error) {
       console.log(error);
@@ -334,7 +328,7 @@ class RestaurantController {
       return;
     }
     try {
-      const restaurant = await this.restaurantRepository.findById(restaurantId);
+      const restaurant = await restaurantRepository.findById(restaurantId);
       res.json(restaurant);
     } catch (error) {
       res.status(500).json({ message: "Error finding the restaurant" });
@@ -348,9 +342,7 @@ class RestaurantController {
       return;
     }
     try {
-      const photos = await this.restaurantRepository.getCarouselPhotos(
-        restaurantId
-      );
+      const photos = await restaurantRepository.getCarouselPhotos(restaurantId);
       res.json(photos);
     } catch (error) {
       res.status(500).json({ message: "Error finding the photos" });

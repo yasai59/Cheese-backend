@@ -74,13 +74,6 @@ restrictionRouter.get(
  *       - Restriction
  *     summary: Get all restrictions
  *     description: Retrieve all restrictions available in the application.
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         description: Bearer token
- *         schema:
- *           type: string
  *     responses:
  *       '200':
  *         description: A list of all restrictions
@@ -98,11 +91,7 @@ restrictionRouter.get(
  *       '500':
  *         description: Internal Server Error
  */
-restrictionRouter.get(
-  "/all",
-  [verifyJWT],
-  restrictionController.getAllRestrictions
-);
+restrictionRouter.get("/all", [], restrictionController.getAllRestrictions);
 
 /**
  * @swagger

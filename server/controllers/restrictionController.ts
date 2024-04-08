@@ -2,18 +2,14 @@ import type { Request, Response } from "express";
 import RestrictionRepository from "../database/Restriction.repository";
 import type RestrictionModel from "../models/Restriction.model";
 
+const repository = new RestrictionRepository();
+
 class RestrictionController {
-  private repository: RestrictionRepository;
-
-  constructor() {
-    this.repository = new RestrictionRepository();
-  }
-
   async getUserRestrictions(req: Request, res: Response) {
     const userId: number = req.user?.id as number;
     let restrictions: RestrictionModel[];
     try {
-      restrictions = await this.repository.findUserRestrictions(userId);
+      restrictions = await repository.findUserRestrictions(userId);
       return res.json({
         message: "User restrictions found",
         restrictions,
@@ -28,7 +24,7 @@ class RestrictionController {
   async getAllRestrictions(req: Request, res: Response) {
     let restrictions: RestrictionModel[];
     try {
-      restrictions = await this.repository.findAll();
+      restrictions = await repository.findAll();
       return res.json({
         message: "All restrictions found",
         restrictions,
@@ -45,7 +41,7 @@ class RestrictionController {
     const { restrictions } = req.body;
     let userRestrictions: RestrictionModel[];
     try {
-      userRestrictions = await this.repository.addRestrictionsToUser(
+      userRestrictions = await repository.addRestrictionsToUser(
         userId,
         restrictions
       );
@@ -64,7 +60,7 @@ class RestrictionController {
     const dishId: number = Number(req.params.dishId);
     let restrictions: RestrictionModel[];
     try {
-      restrictions = await this.repository.findDishRestrictions(dishId);
+      restrictions = await repository.findDishRestrictions(dishId);
       return res.json({
         message: "Dish restrictions found",
         restrictions,
@@ -81,7 +77,7 @@ class RestrictionController {
     const { restrictions } = req.body;
     let dishRestrictions: RestrictionModel[];
     try {
-      dishRestrictions = await this.repository.addRestrictionsToDish(
+      dishRestrictions = await repository.addRestrictionsToDish(
         dishId,
         restrictions
       );

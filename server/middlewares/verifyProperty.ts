@@ -16,7 +16,9 @@ export const verifyProperty = async (
   }
 
   const user = req.user as UserModel;
-
+  if (user.role_id === 3) {
+    return next();
+  }
   if (!restaurantId) {
     return res.status(404).json({ message: "Unauthorized, no id" });
   }

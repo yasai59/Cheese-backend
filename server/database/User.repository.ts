@@ -61,6 +61,17 @@ export default class UserRepository implements IUserRepository {
     let query =
       "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";
 
+    // check if the password starts with: $2b$10$ or $2b$12$
+    // if it does, then the password is hashed
+    // if it doesn't, then the password is not hashed
+    if (
+      user.password &&
+      (user.password.startsWith("$2b$10$") ||
+        user.password.startsWith("$2b$12$"))
+    ) {
+      delete user.password;
+    }
+
     if (!user.password) {
       query =
         "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";

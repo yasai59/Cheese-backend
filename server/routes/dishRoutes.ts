@@ -95,7 +95,7 @@ const dishRouter: Router = express.Router();
  */
 dishRouter.get(
   "/:restaurantId",
-  [verifyJWT, verifyProperty],
+  [verifyJWT],
   dishController.getRestaurantDishes
 );
 
@@ -167,11 +167,7 @@ dishRouter.post(
  *       '500':
  *         description: Internal Server Error
  */
-dishRouter.put(
-  "/:dishId",
-  [verifyJWT, verifyProperty],
-  dishController.updateDish
-);
+dishRouter.put("/:dishId", [verifyJWT], dishController.updateDish);
 
 /**
  * @swagger
@@ -194,11 +190,7 @@ dishRouter.put(
  *       '500':
  *         description: Internal Server Error
  */
-dishRouter.delete(
-  "/:dishId",
-  [verifyJWT, verifyProperty],
-  dishController.deleteDish
-);
+dishRouter.delete("/:dishId", [verifyJWT], dishController.deleteDish);
 
 /**
  * @swagger

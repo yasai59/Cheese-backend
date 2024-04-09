@@ -1,13 +1,10 @@
 import express, { Router } from "express";
-import type { NextFunction, Request, Response } from "express";
-import { check } from "express-validator";
+import type { Request } from "express";
 import { validarCampos } from "../helpers/verifyFields";
 import { verifyJWT } from "../middlewares/verifyJWT";
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import connection from "../database/connection";
-import fs from "fs";
 import { verifyProperty } from "../middlewares/verifyProperty";
 import { verifyRole } from "../middlewares/verifyRole";
 import restaurantController from "../controllers/restaurantController";
@@ -195,7 +192,7 @@ const upload = multer({ storage: storage });
  */
 restaurantRouter.post(
   "/photo/carousel",
-  [verifyJWT, uploadCarousel.array("photo", 12)],
+  [verifyJWT, verifyProperty, uploadCarousel.array("photo", 12)],
   restaurantController.uploadCarouselPhotos
 );
 
@@ -242,7 +239,7 @@ restaurantRouter.post(
  */
 restaurantRouter.put(
   "/photo/carousel/:restaurantId",
-  [verifyJWT, uploadCarousel.array("photo", 12)],
+  [verifyJWT, verifyProperty, uploadCarousel.array("photo", 12)],
   restaurantController.updateCarouselPhotos
 );
 
@@ -293,7 +290,7 @@ restaurantRouter.put(
  */
 restaurantRouter.post(
   "/photo/profile-picture",
-  [verifyJWT, uploadProfilePicture.single("photo")],
+  [verifyJWT, verifyProperty, uploadProfilePicture.single("photo")],
   restaurantController.uploadProfilePicture
 );
 
@@ -337,7 +334,7 @@ restaurantRouter.post(
  */
 restaurantRouter.post(
   "/",
-  [verifyJWT, upload.any(), validarCampos],
+  [verifyJWT, verifyProperty, upload.any(), validarCampos],
   restaurantController.createRestaurant
 );
 
@@ -459,7 +456,7 @@ restaurantRouter.get(
  */
 restaurantRouter.put(
   "/",
-  [verifyJWT, validarCampos],
+  [verifyJWT, verifyProperty, validarCampos],
   restaurantController.updateRestaurant
 );
 
@@ -492,7 +489,7 @@ restaurantRouter.put(
  */
 restaurantRouter.delete(
   "/:restaurantId",
-  [verifyJWT],
+  [verifyJWT, verifyProperty],
   restaurantController.deleteRestaurant
 );
 

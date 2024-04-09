@@ -551,7 +551,11 @@ userRouter.get("/reset-password", userController.resetPassword);
  *                   type: string
  *                   example: "Error changing the password"
  */
-userRouter.post("/change-password", [verifyJWT], userController.changePassword);
+userRouter.post(
+  "/change-password",
+  [verifyJWT, check("oldPassword").notEmpty(), check("newPassword").notEmpty()],
+  userController.changePassword
+);
 
 // DELETE /api/user
 /**

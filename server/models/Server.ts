@@ -69,4 +69,8 @@ export class Server {
       console.log(`Server is running on port ${port}🚀`);
     });
   }
+
+  public getApp(): express.Application {
+    return this.app;
+  }
 }

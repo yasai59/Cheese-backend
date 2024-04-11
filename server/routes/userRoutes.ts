@@ -6,6 +6,7 @@ import { check } from "express-validator";
 import type UserModel from "../models/User.model";
 import { verifyJWT } from "../middlewares/verifyJWT";
 import { validarCampos } from "../helpers/verifyFields";
+import { verifyRole } from "../middlewares";
 import userController from "../controllers/userController";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
@@ -610,7 +611,7 @@ userRouter.delete("/", [verifyJWT], userController.deleteUser);
  *                 type: string
  *                 example: "John Doe"
  *               photo:
- *                 type: string
+ *                 type: stringgetRestaurants
  *                 example: "https://example.com/user/photo.jpg"
  *     responses:
  *       '200':
@@ -655,6 +656,32 @@ userRouter.post(
     validarCampos,
   ],
   userController.googleLogin
+);
+
+/**
+ * @swagger
+ * /api/user/getAll:
+ *   get:
+ *     tags:
+ *      - User
+ *     summary: Get all users
+ *     description: Retrieve all users available in the application.
+ *     responses:
+ *       '200':
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/UserModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+userRouter.get(
+  "/getAll",
+  [verifyJWT, verifyRole(3)],
+  userController.getAllUsers
 );
 
 export default userRouter;

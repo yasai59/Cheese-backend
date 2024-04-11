@@ -135,24 +135,16 @@ class RestaurantController {
   }
 
   async getRestaurants(req: Request, res: Response) {
-    const user: User = req.user as User;
+    let restaurants: RestaurantModel[] = [];
     try {
-      const restaurants = await restaurantRepository.findByOwner(user);
-
-      const promises = restaurants.map(async (restaurant) => {
-        // add the dishes to the restaurant
-        const dishes = await dishRepository.findRestaurantDishes(
-          restaurant.id as number
-        );
-        return { ...restaurant, dishes };
-      });
-
-      const restaurantsWithDishes = await Promise.all(promises);
-
-      res.status(200).json(restaurantsWithDishes);
+      restaurants = await restaurantRepository.findAll();
     } catch (error) {
-      res.status(500).json({ message: "Error finding restaurants by owner" });
+      res.status(500).json({ message: "Error finding all restaurants" });
     }
+    res.json({
+      message: "All restaurants found",
+      restaurants,
+    })
   }
 
   async getProfilePhoto(req: Request, res: Response) {

@@ -453,6 +453,22 @@ class UserController {
     };
     userRepository.saveGoogle(newUser as UserModel);
   }
+
+  async getAllUsers(req: Request, res: Response) {
+    let users: UserModel[];
+    try {
+      users = await userRepository.findAll();
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error finding the users",
+      });
+    }
+    res.json({
+      message: "Users found",
+      users,
+    });
+  
+  }
 }
 
 const userController = new UserController();

@@ -10,6 +10,7 @@ interface IUserRepository {
   findByUsername(username: string): Promise<UserModel>;
   delete(id: number): Promise<void>;
   getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel>;
+  findAll(): Promise<UserModel[]>;
 }
 
 export default class UserRepository implements IUserRepository {
@@ -259,6 +260,17 @@ export default class UserRepository implements IUserRepository {
       return dbUser;
     } catch (error) {
       throw new Error("Error getting info from user");
+    }
+  }
+
+  public async findAll(): Promise<UserModel[]> {
+    const query = "SELECT * FROM user";
+    try {
+      const result = await connection.promise().query(query);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      return users as UserModel[];
+    } catch (error) {
+      throw new Error("Error finding all users");
     }
   }
 }

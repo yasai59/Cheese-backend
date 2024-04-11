@@ -207,15 +207,38 @@ export default class RestaurantRepository implements IRestaurantRepository {
     }
   }
 
+  // public async findAll(): Promise<RestaurantModel[]> {
+  //   // por cada restaurante obtener también el objeto del usuario
+  //   const query = "SELECT * FROM restaurant";
+  //   try {
+  //     const result = await connection.promise().query(query);
+  //     const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
+  //     return restaurants as RestaurantModel[];
+  //   } catch (error) {
+  //     console.log(error);
+  //     throw new Error("Error finding restaurants");
+  //   }
+  // }
+
+  // obtener todos los restaurantes de los usuarios y por cada usuario, obtener el objeto del usuario
   public async findAll(): Promise<RestaurantModel[]> {
     const query = "SELECT * FROM restaurant";
     try {
       const result = await connection.promise().query(query);
       const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
+      for (let restaurant of restaurants) {
+        const queryUser = "SELECT * FROM user WHERE id = ?";
+        const resultUser = await connection.promise().query(queryUser, [
+          restaurant.owner_id,
+        ]);
+        const users: RowDataPacket[] = resultUser[0] as RowDataPacket[];
+        restaurant.owner = users[0] as User;
+      }
       return restaurants as RestaurantModel[];
     } catch (error) {
       console.log(error);
       throw new Error("Error finding restaurants");
     }
   }
+  
 }

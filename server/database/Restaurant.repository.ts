@@ -212,13 +212,20 @@ export default class RestaurantRepository implements IRestaurantRepository {
     try {
       const result = await connection.promise().query(query);
       const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
+      const owners: any = [];
       for (let restaurant of restaurants) {
+        if (owners[restaurant.owner_id]) {
+          restaurant.owner = owners[restaurant.owner_id];
+          continue;
+        }
         const queryUser = "SELECT * FROM user WHERE id = ?";
-        const resultUser = await connection.promise().query(queryUser, [
-          restaurant.owner_id,
-        ]);
+        const resultUser = await connection
+          .promise()
+          .query(queryUser, [restaurant.owner_id]);
         const users: RowDataPacket[] = resultUser[0] as RowDataPacket[];
+        delete users[0].password;
         restaurant.owner = users[0] as User;
+        owners[restaurant.owner_id] = restaurant.owner;
       }
       return restaurants as RestaurantModel[];
     } catch (error) {
@@ -226,5 +233,4 @@ export default class RestaurantRepository implements IRestaurantRepository {
       throw new Error("Error finding restaurants");
     }
   }
-  
 }

@@ -144,7 +144,7 @@ class RestaurantController {
     res.json({
       message: "All restaurants found",
       restaurants,
-    })
+    });
   }
 
   async getProfilePhoto(req: Request, res: Response) {
@@ -191,7 +191,11 @@ class RestaurantController {
       return;
     }
     try {
-      const restaurantUpdated = await restaurantRepository.update(restaurant);
+      const dbRestaurant = await restaurantRepository.findById(restaurant.id);
+      const newRestaurant = { ...dbRestaurant, ...restaurant };
+      const restaurantUpdated = await restaurantRepository.update(
+        newRestaurant
+      );
       res.status(200).json({
         message: "Restaurant updated successfully",
         restaurantUpdated,

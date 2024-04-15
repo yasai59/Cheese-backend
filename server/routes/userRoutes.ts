@@ -364,7 +364,11 @@ userRouter.put("/", [verifyJWT], userController.updateUser);
  *                   type: string
  *                   example: "Error updating the user"
  */
-userRouter.put("/admin", [verifyJWT, verifyRole(3)], userController.updateUser);
+userRouter.put(
+  "/admin",
+  [verifyJWT, verifyRole(3)],
+  userController.updateUsersAsAdmin
+);
 
 // POST /api/user/photo -> change photo
 /**

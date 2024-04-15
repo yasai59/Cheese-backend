@@ -489,9 +489,10 @@ class UserController {
   }
 
   async deleteUserAsAdmin(req: Request, res: Response) {
-    const reqUser = req.user as UserModel;
+    const userId = Number(req.params.id);
+
     try {
-      await userRepository.delete(reqUser.id as number);
+      await userRepository.delete(userId as number);
       return res.json({
         message: "User deleted successfully",
       });

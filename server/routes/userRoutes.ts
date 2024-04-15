@@ -645,9 +645,9 @@ userRouter.delete("/", [verifyJWT], userController.deleteUser);
  *                   example: "Error deleting the user"
  */
 userRouter.delete(
-  "/admin",
+  "/admin/:id",
   [verifyJWT, verifyRole(3)],
-  userController.deleteUser
+  userController.deleteUserAsAdmin
 );
 
 // POST /api/user/google

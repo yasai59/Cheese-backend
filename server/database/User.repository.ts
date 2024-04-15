@@ -73,7 +73,7 @@ export default class UserRepository implements IUserRepository {
 
   public async update(user: UserModel): Promise<UserModel> {
     let query =
-      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";
+      "UPDATE user SET username = ?, email = ?, password = ?, role_id = ?, lot_number = ?, photo = ?, active = ? WHERE id = ?";
 
     // check if the password starts with: $2b$10$ or $2b$12$
     // if it does, then the password is hashed
@@ -88,7 +88,7 @@ export default class UserRepository implements IUserRepository {
 
     if (!user.password) {
       query =
-        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, photo = ? WHERE id = ?";
+        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, photo = ?, active = ? WHERE id = ?";
     }
     try {
       let campos = [
@@ -97,6 +97,7 @@ export default class UserRepository implements IUserRepository {
         user.role_id,
         user.lot_number,
         user.photo,
+        user.active,
         user.id,
       ];
       if (user.password) {
@@ -109,6 +110,7 @@ export default class UserRepository implements IUserRepository {
           user.role_id,
           user.lot_number,
           user.photo,
+          user.active,
           user.id,
         ];
       }

@@ -124,4 +124,33 @@ tasteRouter.get("/all", [verifyJWT], tasteController.getAllTastes);
  */
 tasteRouter.post("/", [verifyJWT], tasteController.addTastesToUser);
 
+/**
+ * @swagger
+ * /api/taste/create:
+ *   get:
+ *     summary: Creates taste
+ *     tags: [Tastes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Message confirming the operation.
+ *                 tastes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TasteModel'
+ *       500:
+ *         description: Internal Server Error
+ */
+tasteRouter.post("/create", [verifyJWT], tasteController.createTaste);
+
+
 export default tasteRouter;

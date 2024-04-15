@@ -249,4 +249,32 @@ restrictionRouter.post(
   restrictionController.addRestrictionsToDish
 );
 
+/**
+ * @swagger
+ * /api/restriction/create:
+ *   get:
+ *     summary: Creates restriction
+ *     tags: [Tastes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: OK
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Message confirming the operation.
+ *                 tastes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TasteModel'
+ *       500:
+ *         description: Internal Server Error
+ */
+restrictionRouter.post("/create", [verifyJWT], restrictionController.createRestriction);
+
 export default restrictionRouter;

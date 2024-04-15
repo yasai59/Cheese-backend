@@ -1,6 +1,7 @@
 import connection from "./connection";
 import type TasteModel from "../models/Taste.model";
 import type { RowDataPacket } from "mysql2";
+import { json } from "express";
 
 interface ITasteRepository {
   findUserTastes(userId: number): Promise<TasteModel[]>;
@@ -8,6 +9,7 @@ interface ITasteRepository {
   findAll(): Promise<TasteModel[]>;
   findDishTastes(dishId: number): Promise<TasteModel[]>;
   addTastesToDish(dishId: number, tastes: number[]): Promise<TasteModel[]>;
+  createTaste(taste: TasteModel): Promise<TasteModel>;
 }
 
 export default class TasteRepository implements ITasteRepository {
@@ -83,4 +85,15 @@ export default class TasteRepository implements ITasteRepository {
     }  
   }
 
+  public async createTaste(taste: TasteModel): Promise<TasteModel> {
+    const query = "INSERT INTO taste (name) VALUES (?)";
+    try {
+      const res = await connection.promise().query(query, [taste.name]);
+      const tastes: RowDataPacket[] = res[0] as RowDataPacket[];
+      const tasteSaved = tastes[0] as TasteModel;
+      return tasteSaved;
+    } catch (e) {
+      throw new Error("Error saving taste");
+    }
+  }
 }

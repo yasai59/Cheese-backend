@@ -14,6 +14,7 @@ interface IRestrictionRepository {
     restrictions: number[]
   ): Promise<RestrictionModel[]>;
   findDishRestrictions(dishId: number): Promise<RestrictionModel[]>;
+  createRestriction(restriction: RestrictionModel): Promise<RestrictionModel>;
 }
 
 export default class RestrictionRepository implements IRestrictionRepository {
@@ -92,6 +93,17 @@ export default class RestrictionRepository implements IRestrictionRepository {
       return await this.findDishRestrictions(dishId);
     } catch (error) {
       throw new Error("Error adding restrictions to dish");
+    }
+  }
+
+  public async createRestriction(restriction: RestrictionModel): Promise<RestrictionModel> {
+    const query = "INSERT INTO restriction (name) VALUES (?)";
+    try {
+      const result = await connection.promise().query(query, [restriction.name]);
+      const restrictions: RowDataPacket[] = result[0] as RowDataPacket[];
+      return restrictions[0] as RestrictionModel;
+    } catch (error) {
+      throw new Error("Error creating restriction");
     }
   }
 }

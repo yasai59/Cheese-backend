@@ -52,6 +52,22 @@ class TasteController {
       });
     }
   }
+
+  async createTaste(req: Request, res: Response): Promise<Response> {
+    const taste: TasteModel = req.body;
+    let newTaste: TasteModel;
+    try {
+      newTaste = await tasteRepository.createTaste(taste);
+      return res.json({
+        message: "Taste created",
+        newTaste,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error creating taste",
+      });
+    }
+  }
 }
 
 export default new TasteController();

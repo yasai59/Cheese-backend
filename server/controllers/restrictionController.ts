@@ -91,6 +91,22 @@ class RestrictionController {
       });
     }
   }
+
+  async createRestriction(req: Request, res: Response) {
+    const restriction: RestrictionModel = req.body;
+    let newRestriction: RestrictionModel;
+    try {
+      newRestriction = await repository.createRestriction(restriction);
+      return res.json({
+        message: "Restriction created",
+        newRestriction,
+      });
+    } catch (e) {
+      return res.status(500).json({
+        message: "Error creating restriction",
+      });
+    }
+  }
 }
 
 export default new RestrictionController();

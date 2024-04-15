@@ -64,7 +64,6 @@ class UserController {
     }
     const verificationCode = btoa(dbUser.email);
     // send the email
-    // TODO: change the link to the production link
     mailSender.sendMail(
       dbUser.email,
       "Welcome to the app",
@@ -255,7 +254,7 @@ class UserController {
       `
       <h1>Reset your password</h1> 
       <br> 
-      <a href="https://apicheese.yasai59.com/api/user/reset-password?code=${verificationCode}&email=${user.email}">Click here to reset your password</a>
+      <a href="https://cheese.yasai59.com/recoverPassword?code=${verificationCode}&email=${user.email}">Click here to reset your password</a>
       `
     );
 
@@ -265,8 +264,9 @@ class UserController {
   }
 
   async resetPassword(req: Request, res: Response) {
-    const verificationCode = req.query.code as string;
-    const email = req.query.email as string;
+    const verificationCode = req.body.code as string;
+    const email = req.body.email as string;
+    const { password } = req.body;
 
     if (!verificationCode) {
       return res.status(400).json({
@@ -294,24 +294,21 @@ class UserController {
       });
     }
 
-    user.password = "1234";
+    user.password = password;
 
     try {
       await userRepository.update(user);
-      console.log("it's been so long");
       await userRepository.saveAction(user, null, null);
-      console.log("since last I've seen my son");
     } catch (error) {
       console.log(error);
-      console.log("lost to this monster");
       return res.status(500).json({
         message: "Error updating the password",
       });
     }
 
-    res.send(
-      "<h1>Password reset successfully to 1234 (this is temporal, we'll make a proper form)</h1>"
-    );
+    res.json({
+      message: "Password updated successfully",
+    });
   }
 
   async changePassword(req: Request, res: Response) {
@@ -467,7 +464,6 @@ class UserController {
       message: "Users found",
       users,
     });
-  
   }
 
   async updateUsersAsAdmin(req: Request, res: Response) {
@@ -475,20 +471,21 @@ class UserController {
     let userDb: UserModel = await userRepository.findById(user.id as number);
     userDb = {
       ...userDb,
-      ...user
+      ...user,
     };
+
+    delete userDb.password;
     try {
       const updatedUser = await userRepository.update(userDb);
       res.json({
         message: "Users updated successfully",
         updatedUser,
-      });  
+      });
     } catch (error) {
       return res.status(500).json({
         message: "Error updating the users",
       });
     }
-    
   }
 
   async deleteUserAsAdmin(req: Request, res: Response) {

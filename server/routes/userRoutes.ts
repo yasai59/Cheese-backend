@@ -495,17 +495,17 @@ userRouter.get("/photo", [verifyJWT], userController.getMyPhoto);
  */
 userRouter.post("/forgot-password", userController.forgotPassword);
 
-// GET /api/user/reset-password
+// PUT /api/user/reset-password
 /**
  * @swagger
  * /api/user/reset-password:
- *   get:
+ *   put:
  *     summary: Reset Password
  *     description: Reset the user's password using a reset token.
  *     tags: [User]
  *     parameters:
- *       - in: query
- *         name: token
+ *       - in: body
+ *         name: code
  *         description: The reset token sent to the user's email
  *         required: true
  *         schema:
@@ -526,7 +526,7 @@ userRouter.post("/forgot-password", userController.forgotPassword);
  *               type: string
  *               example: "<h1>Error resetting the password</h1>"
  */
-userRouter.get("/reset-password", userController.resetPassword);
+userRouter.put("/reset-password", userController.resetPassword);
 
 // POST /api/user/change-password
 /**
@@ -644,7 +644,11 @@ userRouter.delete("/", [verifyJWT], userController.deleteUser);
  *                   type: string
  *                   example: "Error deleting the user"
  */
-userRouter.delete("/admin", [verifyJWT, verifyRole(3)], userController.deleteUser);
+userRouter.delete(
+  "/admin",
+  [verifyJWT, verifyRole(3)],
+  userController.deleteUser
+);
 
 // POST /api/user/google
 /**

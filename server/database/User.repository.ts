@@ -27,6 +27,19 @@ export default class UserRepository implements IUserRepository {
     }
   }
 
+  public async findById(id: number): Promise<UserModel> {
+    const query = "SELECT * FROM user WHERE id = ?";
+    try {
+      const result = await connection.promise().query(query, id);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const user = users[0] as UserModel;
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error finding user by id");
+    }
+  }
+
   public async findByUsername(username: string): Promise<UserModel> {
     const query = "SELECT * FROM user WHERE username = ? AND active = 1";
     try {

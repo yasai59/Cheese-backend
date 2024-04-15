@@ -55,3 +55,10 @@ class TasteController {
 }
 
 export default new TasteController();
+
+
+/* 
+editar tecer usuario como admin (editar eliminar)
+crear taste y crear restriccion
+ruta de los reports
+*/

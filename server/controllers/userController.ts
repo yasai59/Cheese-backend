@@ -469,6 +469,41 @@ class UserController {
     });
   
   }
+
+  async updateUsersAsAdmin(req: Request, res: Response) {
+    let user: UserModel = req.body;
+    let userDb: UserModel = await userRepository.findById(user.id as number);
+    userDb = {
+      ...userDb,
+      ...user
+    };
+    try {
+      const updatedUser = await userRepository.update(userDb);
+      res.json({
+        message: "Users updated successfully",
+        updatedUser,
+      });  
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error updating the users",
+      });
+    }
+    
+  }
+
+  async deleteUserAsAdmin(req: Request, res: Response) {
+    const reqUser = req.user as UserModel;
+    try {
+      await userRepository.delete(reqUser.id as number);
+      return res.json({
+        message: "User deleted successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error deleting the user",
+      });
+    }
+  }
 }
 
 const userController = new UserController();

@@ -330,6 +330,42 @@ userRouter.post(
  */
 userRouter.put("/", [verifyJWT], userController.updateUser);
 
+// PUT /api/user/admin
+/**
+ * @swagger
+ * /api/user/admin:
+ *   put:
+ *     summary: Update User As Admin
+ *     description: Update user information.
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/UserModel"
+ *     responses:
+ *       '200':
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/UserModel"
+ *       '500':
+ *         description: Error updating the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error updating the user"
+ */
+userRouter.put("/admin", [verifyJWT, verifyRole(3)], userController.updateUser);
+
 // POST /api/user/photo -> change photo
 /**
  * @swagger
@@ -583,6 +619,32 @@ userRouter.post(
  *                   example: "Error deleting the user"
  */
 userRouter.delete("/", [verifyJWT], userController.deleteUser);
+
+// DELETE /api/user/admin
+/**
+ * @swagger
+ * /api/user:
+ *   delete:
+ *     summary: Delete User
+ *     description: Delete the user's account.
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '204':
+ *         description: User deleted successfully
+ *       '500':
+ *         description: Error deleting the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Error deleting the user"
+ */
+userRouter.delete("/admin", [verifyJWT, verifyRole(3)], userController.deleteUser);
 
 // POST /api/user/google
 /**

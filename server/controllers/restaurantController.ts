@@ -307,9 +307,8 @@ class RestaurantController {
       res.status(500).json({ message: "User not found" });
       return;
     }
-    const owner_id = user.user_id;
     try {
-      const restaurants = await restaurantRepository.findByOwner(owner_id);
+      const restaurants = await restaurantRepository.findByOwner(user);
       res.status(200).json(restaurants);
     } catch (error) {
       console.log(error);

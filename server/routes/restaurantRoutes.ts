@@ -27,7 +27,7 @@ const storageCarousel = multer.diskStorage({
       req.user?.name +
       "_" +
       uuidv4() +
-      Date.now +
+      Date.now() +
       path.extname(file.originalname);
     if (!req.photoName) {
       req.photoName = [];
@@ -423,6 +423,12 @@ restaurantRouter.get(
   "/carousel/photo/:name",
   [],
   restaurantController.getCarouselPhoto
+);
+
+restaurantRouter.get(
+  "/carousel/:restaurantId",
+  [],
+  restaurantController.getCarouselPhotosById
 );
 
 /**

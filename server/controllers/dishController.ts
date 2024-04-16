@@ -17,11 +17,14 @@ class DishController {
     }
   }
 
-  async createDish(req: Request, res: Response) {
+  async createDish(req: any, res: Response) {
     const restaurantId = Number(req.params.restaurantId);
     const dish = req.body as DishModel;
     try {
-      const dishSaved = await dishRepository.addDish(restaurantId, dish);
+      const dishSaved = await dishRepository.addDish(restaurantId, {
+        ...dish,
+        photo: req.photoName,
+      });
       res.status(201).json(dishSaved);
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });

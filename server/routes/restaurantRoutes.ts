@@ -334,7 +334,7 @@ restaurantRouter.post(
  */
 restaurantRouter.post(
   "/",
-  [verifyJWT, verifyProperty, upload.any(), validarCampos],
+  [verifyJWT, upload.any(), validarCampos],
   restaurantController.createRestaurant
 );
 

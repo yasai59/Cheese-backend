@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { verifyJWT, verifyProperty } from "../middlewares";
+import { verifyJWT, verifyRole } from "../middlewares";
 import reportController from "../controllers/reportController";
 
 const reportRouter: Router = express.Router();
@@ -68,7 +68,61 @@ const reportRouter: Router = express.Router();
  *       '500':
  *         description: Internal Server Error
  */
-reportRouter.post("/:restaurantId", [verifyJWT, verifyProperty], reportController.createReport);
+reportRouter.post("/:restaurantId", [verifyJWT], reportController.createReport);
+
+/**
+ * @swagger
+ * /api/report/getReports/{restaurantId}:
+ *   post:
+ *     tags:
+ *       - Reports
+ *     summary: Get all reports from a restaurant (admin only)
+ *     description: Get all reports from a restaurant (admin only)
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         description: ID of the restaurant
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ReportModel'
+ *     responses:
+ *       '201':
+ *         description: The reports from the restaurant
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReportModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+reportRouter.get("/getReports/:restaurantId", [verifyJWT, verifyRole(3)], reportController.findRestaurantReports);
+
+/**
+ * @swagger
+ * /api/report/getAll:
+ *   post:
+ *     tags:
+ *       - Reports
+ *     summary: Get all reports  (admin only)
+ *     description: Get all reports (admin only)
+ *     responses:
+ *       '201':
+ *         description: All reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ReportModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+reportRouter.get("/getAll", [verifyJWT, verifyRole(3)], reportController.findAllReports);
+
 
 
 export default reportRouter;

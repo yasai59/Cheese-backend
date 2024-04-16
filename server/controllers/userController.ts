@@ -502,6 +502,25 @@ class UserController {
       });
     }
   }
+
+  async getProfilePhoto(req: Request, res: Response) {
+    const { photo } = req.params;
+
+    if (!photo) {
+      return res.sendFile(
+        path.join(dir, `../../uploads/user_photos/default.jpg`)
+      );
+    }
+
+    // look if image exists
+    if (!fs.existsSync(path.join(dir, `../../uploads/user_photos/${photo}`))) {
+      return res.sendFile(
+        path.join(dir, `../../uploads/user_photos/default.jpg`)
+      );
+    }
+
+    res.sendFile(path.join(dir, `../../uploads/user_photos/${photo}`));
+  }
 }
 
 const userController = new UserController();

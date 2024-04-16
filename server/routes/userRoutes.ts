@@ -444,6 +444,8 @@ userRouter.post(
  */
 userRouter.get("/photo", [verifyJWT], userController.getMyPhoto);
 
+userRouter.get("/profilephoto/:photo", [], userController.getProfilePhoto);
+
 // POST /api/user/forgot-password
 /**
  * @swagger

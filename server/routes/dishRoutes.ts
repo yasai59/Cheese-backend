@@ -10,14 +10,15 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(dir, "../../uploads/dish_photos/"));
   },
-  filename: (req, file, cb) => {
+  filename: (req: any, file, cb) => {
     const name =
-      req.user?.name +
+      req.user?.username +
       "_" +
       uuidv4() +
       Date.now() +
-      "." +
       path.extname(file.originalname);
+
+    req.photoName = name;
     cb(null, name);
   },
 });

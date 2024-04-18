@@ -8,6 +8,7 @@ import restrictionRouter from "../routes/restrictionRoutes";
 import restaurantRouter from "../routes/restaurantRoutes";
 import dishRouter from "../routes/dishRoutes";
 import reportRouter from "../routes/reportRoutes";
+import reasonRouter from "../routes/reasonRoutes";
 import swaggerDocs from "./swagger";
 
 export class Server {
@@ -51,6 +52,7 @@ export class Server {
     this.app.use(this.apiPath + "/restaurant", restaurantRouter);
     this.app.use(this.apiPath + "/dish", dishRouter);
     this.app.use(this.apiPath + "/report", reportRouter);
+    this.app.use(this.apiPath + "/reason", reasonRouter);
   }
 
   private sockets(): void {

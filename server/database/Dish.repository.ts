@@ -65,10 +65,48 @@ export default class DishRepository implements IDishRepository {
   public async findRestaurantDishes(
     restaurantId: number
   ): Promise<DishModel[]> {
-    const query = "SELECT * FROM dish WHERE restaurant_id = ?";
+    const query = `SELECT 
+    dish.id AS dish_id,
+    dish.name AS dish_name,
+    dish.photo AS dish_photo,
+    dish.description AS dish_description,
+    dish.price AS dish_price,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', taste.id,
+            'name', taste.name
+        )
+    ) AS tastes,
+    JSON_ARRAYAGG(
+        JSON_OBJECT(
+            'id', restriction.id,
+            'name', restriction.name
+        )
+    ) AS restrictions
+    FROM 
+        dish
+    LEFT JOIN 
+        dish_taste ON dish.id = dish_taste.dish_id
+    LEFT JOIN 
+        taste ON dish_taste.taste_id = taste.id
+    LEFT JOIN 
+        dish_restriction ON dish.id = dish_restriction.dish_id
+    LEFT JOIN 
+        restriction ON dish_restriction.restriction_id = restriction.id
+    WHERE 
+        dish.restaurant_id = ?
+    GROUP BY 
+        dish.id;
+    `;
     try {
       const result = await connection.promise().query(query, [restaurantId]);
       const dishes: RowDataPacket[] = result[0] as RowDataPacket[];
+
+      dishes.forEach((dish) => {
+        dish.tastes = JSON.parse(dish.tastes);
+        dish.restrictions = JSON.parse(dish.restrictions);
+      })
+
       return dishes as DishModel[];
     } catch (error) {
       console.log(error);

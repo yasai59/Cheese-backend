@@ -661,4 +661,31 @@ restaurantRouter.get(
   restaurantController.getRestaurants
 );
 
+
+/**
+ * @swagger
+ * /api/restaurant/getRecommendations:
+ *   get:
+ *     tags:
+ *      - Restaurant
+ *     summary: Get an array of filtered restaurants for an specific user
+ *     description: Retrieve all restaurants available in the application with common tastes and restrictions for users.
+ *     responses:
+ *       '200':
+ *         description: A list of restaurants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RestaurantModel'
+ *       '500':
+ *         description: Internal Server Error
+ */
+restaurantRouter.get(
+  "/getRecommendations",
+  [verifyJWT],
+  restaurantController.recommendRestaurant
+);
+
 export default restaurantRouter;

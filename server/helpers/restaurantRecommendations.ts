@@ -3,8 +3,10 @@ import type UserModel from "../models/User.model";
 import TasteRepository from "../database/Taste.repository";
 import DishRepository from "../database/Dish.repository";
 import RestrictionRepository from "../database/Restriction.repository";
+import RestaurantRepository from "../database/Restaurant.repository";
+import UserRepository from "../database/User.repository";
 
-async function filterRestaurants(restaurants: RestaurantModel[], user: UserModel): Promise<RestaurantModel[]> {
+export async function filterRestaurants(restaurants: RestaurantModel[], user: UserModel): Promise<RestaurantModel[]> {
     const lotNumber = user.lot_number || 5;
     
     const tasteRepository = new TasteRepository();
@@ -27,7 +29,24 @@ async function filterRestaurants(restaurants: RestaurantModel[], user: UserModel
                 hasCommonRestriction = true;
                 return;
             };
+
+            const commonTastes = dishTaste.filter((taste) => userTastes.includes(taste));
+
+            if (commonTastes.length > 0 && !hasCommonRestriction) {
+                filteredRestaurants.push(restaurant);
+                if (filterRestaurants.length === lotNumber) return;
+            }
             
         })
     }
+    while (filteredRestaurants.length < lotNumber && restaurants.length > 0) {
+        const randomIndex = Math.floor(Math.random() * restaurants.length);
+        const randomRestaurant = restaurants[randomIndex];
+        if (!filteredRestaurants.includes(randomRestaurant)) {
+            filteredRestaurants.push(randomRestaurant);
+        }
+    }
+
+    return filteredRestaurants;
 }
+

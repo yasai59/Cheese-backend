@@ -11,6 +11,7 @@ interface IUserRepository {
   delete(id: number): Promise<void>;
   getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel>;
   findAll(): Promise<UserModel[]>;
+  
 }
 
 export default class UserRepository implements IUserRepository {

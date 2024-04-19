@@ -448,7 +448,23 @@ class UserController {
       username,
       role_id: 1,
     };
-    userRepository.saveGoogle(newUser as UserModel);
+    let dbUser = await userRepository.saveGoogle(newUser as UserModel);
+
+    // create the token
+    const token: string = jwt.sign(
+      {
+        email: newUser.email,
+      },
+      process.env.JWT_SECRET as string
+    );
+
+    delete dbUser.password;
+
+    return res.json({
+      message: "User created successfully",
+      token,
+      user: dbUser,
+    });
   }
 
   async getAllUsers(req: Request, res: Response) {

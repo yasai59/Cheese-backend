@@ -445,7 +445,7 @@ class UserController {
     // create the user
     const newUser = {
       email,
-      username: name,
+      username,
       role_id: 1,
     };
     userRepository.saveGoogle(newUser as UserModel);

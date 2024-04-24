@@ -34,6 +34,9 @@ export const verifyJWT = async (
       process.env.JWT_SECRET as string
     ) as Decoded;
     const user = await userRepository.findByEmail(decoded.email);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     req.user = user;
     next();
   } catch (error) {

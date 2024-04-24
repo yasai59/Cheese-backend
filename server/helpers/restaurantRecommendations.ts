@@ -21,7 +21,7 @@ export async function filterRestaurants(
   user: UserModel
 ): Promise<RestaurantModel[]> {
   const userRestrictions = await restrictionRepository.findUserRestrictions(
-    Number(user.id)
+    user.id as number
   );
 
   const filteredRestaurants: RestaurantModel[] = await asyncFilter(
@@ -31,19 +31,13 @@ export async function filterRestaurants(
         Number(restaurant.id)
       );
 
-      restaurantDishes.forEach(async (dish) => {
-        const dishRestriction: RestrictionModel[] =
-          await restrictionRepository.findDishRestrictions(Number(dish.id));
-
-        dish.restrictions = dishRestriction;
-      });
-
       const total = restaurantDishes.length;
+      if (total === 0) return false;
       const cadaUno = 100 / total;
 
       const canEatPercent: number = restaurantDishes.reduce(
         (acc: any, dish: any) => {
-          const canEat = dish.restrictions.some((restriction: any) => {
+          const canEat = !dish.restrictions.some((restriction: any) => {
             return userRestrictions.includes(restriction);
           });
 
@@ -52,9 +46,9 @@ export async function filterRestaurants(
         0
       );
 
-      if (canEatPercent > 50) {
-        return true;
-      }
+      console.log(canEatPercent);
+
+      return canEatPercent > 50;
     }
   );
 

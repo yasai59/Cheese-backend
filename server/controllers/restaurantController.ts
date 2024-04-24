@@ -349,8 +349,9 @@ class RestaurantController {
   }
 
   async recommendRestaurant(req: Request, res: Response) {
-    const restaurants = await restaurantRepository.findAll();
     const user: User = req.user as User;
+    const restaurants = await restaurantRepository.findAll();
+
     try {
       const filteredRestaurants = await filterRestaurants(restaurants, user);
       console.log(filteredRestaurants);

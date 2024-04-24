@@ -142,6 +142,7 @@ class RestaurantController {
     let restaurants: RestaurantModel[] = [];
     try {
       restaurants = await restaurantRepository.findAll();
+      res.status(200).json({ message: "All restaurants found", restaurants });
     } catch (error) {
       res.status(500).json({ message: "Error finding all restaurants" });
     }

@@ -209,97 +209,70 @@ export default class RestaurantRepository implements IRestaurantRepository {
   }
 
   public async findAll(): Promise<RestaurantModel[]> {
-    const query = "SELECT * FROM restaurant";
-    try {
-      const result = await connection.promise().query(query);
-      const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
-      const carousels: any = [];
-      const owners: any = [];
-      for (let restaurant of restaurants) {
-        if (carousels[restaurant.id]) { 
-          restaurant.carousel = carousels[restaurant.id];
-          continue;
-        }
-        const queryCarousel = "SELECT * FROM carousel WHERE restaurant_id = ?";
-        const resultCarousel = await connection
-          .promise()
-          .query(queryCarousel, [restaurant.id]);
-        const carousel: RowDataPacket[] = resultCarousel[0] as RowDataPacket[];
-        restaurant.carousel = carousel.map((photo) => photo.photo);
-        carousels[restaurant.id] = restaurant.carousel;
-        const querySuscription = "SELECT * FROM suscription WHERE restaurant_id = ?";
-        const resultSuscription = await connection
-          .promise()
-          .query(querySuscription, [restaurant.id]);
-        const suscriptions: RowDataPacket[] = resultSuscription[0] as RowDataPacket[];
-        if (suscriptions.length > 0) {
-          const suscription = suscriptions[0];
-          const currentDate = new Date();
-          const expirationDate = new Date(suscription.end_date);
-          if (currentDate <= expirationDate) {
-            restaurant.active_suscription = true;
-          } else {
-            restaurant.active_suscription = false;
-          }
-        } else {
-          restaurant.active_suscription = false;
-        }
-        if (owners[restaurant.owner_id]) {
-          restaurant.owner = owners[restaurant.owner_id];
-          continue;
-        }
-        const queryUser = "SELECT * FROM user WHERE id = ?";
-        const resultUser = await connection
-          .promise()
-          .query(queryUser, [restaurant.owner_id]);
-        const users: RowDataPacket[] = resultUser[0] as RowDataPacket[];
-        delete users[0].password;
-        restaurant.owner = users[0] as User;
-        owners[restaurant.owner_id] = restaurant.owner;
+    const query = `
+        SELECT 
+            r.*,
+            (
+                SELECT GROUP_CONCAT(photo) 
+                FROM carousel 
+                WHERE restaurant_id = r.id
+            ) AS carousel_photos,
+            (
+                SELECT IF(s.restaurant_id IS NOT NULL AND s.end_date >= NOW(), true, false) 
+                FROM suscription s 
+                WHERE s.restaurant_id = r.id
+            ) AS active_subscription,
+            (
+                SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                'id', d.id,
+                                'name', d.name,
+                                'tastes', (
+                                    SELECT JSON_ARRAYAGG(
+                                                JSON_OBJECT(
+                                                    'id', t.id,
+                                                    'name', t.name
+                                                )
+                                            ) 
+                                    FROM taste t 
+                                    INNER JOIN dish_taste dt ON t.id = dt.taste_id 
+                                    WHERE dt.dish_id = d.id
+                                ),
+                                'restrictions', (
+                                    SELECT JSON_ARRAYAGG(
+                                                JSON_OBJECT(
+                                                    'id', res.id,
+                                                    'name', res.name
+                                                )
+                                            ) 
+                                    FROM restriction res 
+                                    INNER JOIN dish_restriction dr ON res.id = dr.restriction_id 
+                                    WHERE dr.dish_id = d.id
+                                )
+                            )
+                        ) 
+                FROM dish d 
+                WHERE d.restaurant_id = r.id
+            ) AS dishes
+        FROM 
+            restaurant r;
+    `;
 
-        const dishesQuery = `
-                SELECT 
-                    dish.*, 
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', taste.id,
-                            'name', taste.name
-                        )
-                    ) AS tastes,
-                    JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'id', restriction.id,
-                            'name', restriction.name
-                        )
-                    ) AS restrictions
-                FROM 
-                    dish
-                LEFT JOIN 
-                    dish_taste ON dish.id = dish_taste.dish_id
-                LEFT JOIN 
-                    taste ON dish_taste.taste_id = taste.id
-                LEFT JOIN 
-                    dish_restriction ON dish.id = dish_restriction.dish_id
-                LEFT JOIN 
-                    restriction ON dish_restriction.restriction_id = restriction.id
-                WHERE 
-                    dish.restaurant_id = ?
-                GROUP BY 
-                    dish.id;
-            `;
-        const dishesResult = await connection.promise().query(dishesQuery, [restaurant.id]);
-        const dishesData: RowDataPacket[] = dishesResult[0] as RowDataPacket[];
-        dishesData.forEach((dish) => {
-          dish.tastes = JSON.parse(dish.tastes);
-          dish.restrictions = JSON.parse(dish.restrictions);
-        })
-        dishesData ? restaurant.dishes = dishesData as DishModel[] : restaurant.dishes = [];
-        restaurant.dishes;
-      }
-      return restaurants as RestaurantModel[];
+    try {
+        const result = await connection.promise().query(query);
+        const restaurants: any[] = result[0] as any[];
+        
+        return restaurants.map((restaurant) => {
+            restaurant.carousel_photos = restaurant.carousel_photos ? restaurant.carousel_photos.split(',') : [];
+            restaurant.active_subscription = !!restaurant.active_subscription;
+            restaurant.dishes = restaurant.dishes ? JSON.parse(restaurant.dishes) : [];
+            return restaurant as RestaurantModel;
+        });
     } catch (error) {
-      console.log(error);
-      throw new Error("Error finding restaurants");
+        console.log(error);
+        throw new Error("Error finding restaurants");
     }
-  }
+}
+
+
 }

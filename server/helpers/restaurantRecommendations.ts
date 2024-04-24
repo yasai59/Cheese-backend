@@ -1,6 +1,4 @@
 import type RestaurantModel from "../models/Restaurant.model";
-import type TasteModel from "../models/Taste.model";
-import type RestrictionModel from "../models/Restaurant.model";
 import type UserModel from "../models/User.model";
 import TasteRepository from "../database/Taste.repository";
 import DishRepository from "../database/Dish.repository";
@@ -9,12 +7,6 @@ import RestrictionRepository from "../database/Restriction.repository";
 const tasteRepository = new TasteRepository();
 const restrictionRepository = new RestrictionRepository();
 const dishRepository = new DishRepository();
-
-const asyncFilter = async (arr: any[], predicate: any) => {
-  const results = await Promise.all(arr.map(predicate));
-
-  return arr.filter((_v, index) => results[index]);
-};
 
 export async function filterRestaurants(
   restaurants: RestaurantModel[],
@@ -49,47 +41,28 @@ export async function rateAndOrderRestaurants(
   restaurants: RestaurantModel[],
   user: UserModel
 ): Promise<RestaurantModel[]> {
-  const userTastes = await tasteRepository.findUserTastes(Number(user.id));
+  return restaurants.sort((a, b) => {
+    let aGrade = 0;
+    let bGrade = 0;
 
-  const ratedRestaurants: RestaurantModel[] = [];
-
-  async function calculateRestaurantRating(restaurant: RestaurantModel) {
-    let rating = 0;
-    let hasCommonRestriction = false;
-
-    const restaurantDishes = await dishRepository.findRestaurantDishes(
-      Number(restaurant.id)
-    );
-    restaurantDishes.forEach(async (dish) => {
-      const dishTaste = await tasteRepository.findDishTastes(Number(dish.id));
-      const dishRestriction = await restrictionRepository.findDishRestrictions(
-        Number(dish.id)
-      );
-
-      const commonRestrictions = dishRestriction.filter((restriction) =>
-        user.restrictions.includes(restriction.id)
-      );
-      if (commonRestrictions.length > 0) {
-        hasCommonRestriction = true;
-        return;
-      }
-
-      const commonTastes = dishTaste.filter((taste) =>
-        userTastes.includes(taste)
-      );
-
-      if (commonTastes.length > 0 && !hasCommonRestriction) {
-        rating++;
-      }
+    a.dishes.forEach((dish: any) => {
+      dish.tastes.forEach((taste: any) => {
+        if (user.tastes.includes(taste)) {
+          aGrade++;
+        }
+      });
     });
 
-    return hasCommonRestriction ? 0 : rating;
-  }
+    b.dishes.forEach((dish: any) => {
+      dish.tastes.forEach((taste: any) => {
+        if (user.tastes.includes(taste)) {
+          bGrade++;
+        }
+      });
+    });
 
-  for (const restaurant of restaurants) {
-    const rating = await calculateRestaurantRating(restaurant);
-    ratedRestaurants.push({ ...restaurant, rating });
-  }
+    console.log(bGrade, aGrade);
 
-  return ratedRestaurants.sort((a, b) => b.rating - a.rating);
+    return bGrade - aGrade;
+  });
 }

@@ -24,35 +24,25 @@ export async function filterRestaurants(
     user.id as number
   );
 
-  const filteredRestaurants: RestaurantModel[] = await asyncFilter(
-    restaurants,
-    async (restaurant: RestaurantModel) => {
-      const restaurantDishes = await dishRepository.findRestaurantDishes(
-        Number(restaurant.id)
-      );
+  return restaurants.filter((restaurant: RestaurantModel) => {
+    const total = restaurant.dishes.length;
 
-      const total = restaurantDishes.length;
-      if (total === 0) return false;
-      const cadaUno = 100 / total;
+    if (total === 0) return false;
+    const eachOne = 100 / total;
 
-      const canEatPercent: number = restaurantDishes.reduce(
-        (acc: any, dish: any) => {
-          const canEat = !dish.restrictions.some((restriction: any) => {
-            return userRestrictions.includes(restriction);
-          });
+    const canEatPercent: number = restaurant.dishes.reduce(
+      (acc: any, dish: any) => {
+        const canEat = !dish.restrictions.some((restriction: any) => {
+          return userRestrictions.includes(restriction);
+        });
 
-          return acc + (canEat ? cadaUno : 0);
-        },
-        0
-      );
+        return acc + (canEat ? eachOne : 0);
+      },
+      0
+    );
 
-      console.log(canEatPercent);
-
-      return canEatPercent > 50;
-    }
-  );
-
-  return filteredRestaurants;
+    return canEatPercent >= 50;
+  });
 }
 
 export async function rateAndOrderRestaurants(

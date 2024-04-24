@@ -144,7 +144,7 @@ tasteRouter.post("/", [verifyJWT], tasteController.addTastesToUser);
  *                   type: string
  *                   description: Message confirming the operation.
  *                 tastes:
- *                   type: array
+ *                   typeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFycmlidUBqdmlsYWRvbXMuY2F0IiwiaWF0IjoxNzEzOTM5MTY1fQ.L_4poO32lq_1UsKnit7K1xR54v9g-r9pTxY7GpWCOr4e: array
  *                   items:
  *                     $ref: '#/components/schemas/TasteModel'
  *       500:
@@ -152,5 +152,8 @@ tasteRouter.post("/", [verifyJWT], tasteController.addTastesToUser);
  */
 tasteRouter.post("/create", [verifyJWT], tasteController.createTaste);
 
+tasteRouter.post("/addTasteToDish", [verifyJWT], tasteController.addTasteToDish);
+
+tasteRouter.get("/:dishId/tastes", [verifyJWT], tasteController.getDishTaste);
 
 export default tasteRouter;

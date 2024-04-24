@@ -68,13 +68,34 @@ class TasteController {
       });
     }
   }
+
+  async addTasteToDish(req: Request, res: Response): Promise<Response> {
+    const dishId: number = req.body.dishId;
+    const { tastes } = req.body;
+    let dishTastes: TasteModel[];
+    try {
+      dishTastes = await tasteRepository.addTastesToDish(dishId, tastes);
+      return res.json({
+        message: "Tastes added to dish",
+        dishTastes,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error adding tastes to dish",
+      });
+    }
+  }
+
+  async getDishTaste(req: Request, res: Response): Promise<Response> {
+    const dishId: number = Number(req.params.dishId); // Ajusta según cómo se espera el ID del plato en la solicitud
+    try {
+        const tastes: TasteModel[] = await tasteRepository.findDishTastes(dishId);
+        return res.status(200).json(tastes);
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ message: "Error finding dish tastes" });
+    }
+}
 }
 
 export default new TasteController();
-
-
-/* 
-editar tecer usuario como admin (editar eliminar)
-crear taste y crear restriccion
-ruta de los reports
-*/

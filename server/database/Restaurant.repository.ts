@@ -1,5 +1,6 @@
 import connection from "./connection";
 import type RestaurantModel from "../models/Restaurant.model";
+import type DishModel from "../models/Dish.model";
 import type { RowDataPacket } from "mysql2";
 import type User from "../models/User.model";
 
@@ -212,8 +213,37 @@ export default class RestaurantRepository implements IRestaurantRepository {
     try {
       const result = await connection.promise().query(query);
       const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
+      const carousels: any = [];
       const owners: any = [];
       for (let restaurant of restaurants) {
+        if (carousels[restaurant.id]) { 
+          restaurant.carousel = carousels[restaurant.id];
+          continue;
+        }
+        const queryCarousel = "SELECT * FROM carousel WHERE restaurant_id = ?";
+        const resultCarousel = await connection
+          .promise()
+          .query(queryCarousel, [restaurant.id]);
+        const carousel: RowDataPacket[] = resultCarousel[0] as RowDataPacket[];
+        restaurant.carousel = carousel.map((photo) => photo.photo);
+        carousels[restaurant.id] = restaurant.carousel;
+        const querySuscription = "SELECT * FROM suscription WHERE restaurant_id = ?";
+        const resultSuscription = await connection
+          .promise()
+          .query(querySuscription, [restaurant.id]);
+        const suscriptions: RowDataPacket[] = resultSuscription[0] as RowDataPacket[];
+        if (suscriptions.length > 0) {
+          const suscription = suscriptions[0];
+          const currentDate = new Date();
+          const expirationDate = new Date(suscription.end_date);
+          if (currentDate <= expirationDate) {
+            restaurant.active_suscription = true;
+          } else {
+            restaurant.active_suscription = false;
+          }
+        } else {
+          restaurant.active_suscription = false;
+        }
         if (owners[restaurant.owner_id]) {
           restaurant.owner = owners[restaurant.owner_id];
           continue;
@@ -226,6 +256,45 @@ export default class RestaurantRepository implements IRestaurantRepository {
         delete users[0].password;
         restaurant.owner = users[0] as User;
         owners[restaurant.owner_id] = restaurant.owner;
+
+        const dishesQuery = `
+                SELECT 
+                    dish.*, 
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', taste.id,
+                            'name', taste.name
+                        )
+                    ) AS tastes,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', restriction.id,
+                            'name', restriction.name
+                        )
+                    ) AS restrictions
+                FROM 
+                    dish
+                LEFT JOIN 
+                    dish_taste ON dish.id = dish_taste.dish_id
+                LEFT JOIN 
+                    taste ON dish_taste.taste_id = taste.id
+                LEFT JOIN 
+                    dish_restriction ON dish.id = dish_restriction.dish_id
+                LEFT JOIN 
+                    restriction ON dish_restriction.restriction_id = restriction.id
+                WHERE 
+                    dish.restaurant_id = ?
+                GROUP BY 
+                    dish.id;
+            `;
+        const dishesResult = await connection.promise().query(dishesQuery, [restaurant.id]);
+        const dishesData: RowDataPacket[] = dishesResult[0] as RowDataPacket[];
+        dishesData.forEach((dish) => {
+          dish.tastes = JSON.parse(dish.tastes);
+          dish.restrictions = JSON.parse(dish.restrictions);
+        })
+        dishesData ? restaurant.dishes = dishesData as DishModel[] : restaurant.dishes = [];
+        restaurant.dishes;
       }
       return restaurants as RestaurantModel[];
     } catch (error) {

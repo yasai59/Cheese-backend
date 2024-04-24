@@ -5,7 +5,10 @@ import path from "path";
 import type RestaurantModel from "../models/Restaurant.model";
 import type User from "../models/User.model";
 import RestaurantRepository from "../database/Restaurant.repository";
-import { filterRestaurants, rateAndOrderRestaurants } from "../helpers/restaurantRecommendations";
+import {
+  filterRestaurants,
+  rateAndOrderRestaurants,
+} from "../helpers/restaurantRecommendations";
 
 interface PhotoRequest extends Request {
   photoName?: string | Array<string>;
@@ -347,19 +350,15 @@ class RestaurantController {
 
   async recommendRestaurant(req: Request, res: Response) {
     const restaurants = await restaurantRepository.findAll();
-    const user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
+    const user: User = req.user as User;
     try {
-        const filteredRestaurants = await filterRestaurants(restaurants, user);
-        console.log(filteredRestaurants);
-        res.status(200).json({filteredRestaurants})
+      const filteredRestaurants = await filterRestaurants(restaurants, user);
+      console.log(filteredRestaurants);
+      res.status(200).json({ filteredRestaurants });
     } catch (error) {
-        res.status(500).json({ message: "Error filtering restaurants" });
+      res.status(500).json({ message: "Error filtering restaurants" });
     }
-  } 
+  }
 
   async getRatedRestaurants(req: Request, res: Response) {
     const restaurants = await restaurantRepository.findAll();
@@ -370,7 +369,7 @@ class RestaurantController {
     }
     try {
       const ratedRestaurants = await rateAndOrderRestaurants(restaurants, user);
-      res.status(200).json({ratedRestaurants})
+      res.status(200).json({ ratedRestaurants });
     } catch (error) {
       res.status(500).json({ message: "Error getting rated restaurants" });
     }

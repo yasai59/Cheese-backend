@@ -7,7 +7,8 @@ import type User from "../models/User.model";
 import RestaurantRepository from "../database/Restaurant.repository";
 import {
   filterRestaurants,
-  rateAndOrderRestaurants,
+  orderRestaurants,
+  recommend,
 } from "../helpers/restaurantRecommendations";
 
 interface PhotoRequest extends Request {
@@ -354,26 +355,19 @@ class RestaurantController {
     const restaurants = await restaurantRepository.findAll();
 
     try {
+      let defRestaurants;
       const filteredRestaurants = await filterRestaurants(restaurants, user);
-      console.log(filteredRestaurants);
-      res.status(200).json({ filteredRestaurants });
-    } catch (error) {
-      res.status(500).json({ message: "Error filtering restaurants" });
-    }
-  }
+      const orderedRestaurants = await orderRestaurants(
+        filteredRestaurants,
+        user
+      );
+      defRestaurants = await recommend(orderedRestaurants, user);
 
-  async getRatedRestaurants(req: Request, res: Response) {
-    const restaurants = await restaurantRepository.findAll();
-    const user: User | undefined = req.user;
-    if (!user) {
-      res.status(500).json({ message: "User not found" });
-      return;
-    }
-    try {
-      const ratedRestaurants = await rateAndOrderRestaurants(restaurants, user);
-      res.status(200).json({ ratedRestaurants });
+      console.log(defRestaurants);
+      res.status(200).json({ recomendations: defRestaurants });
     } catch (error) {
-      res.status(500).json({ message: "Error getting rated restaurants" });
+      console.log(error);
+      res.status(500).json({ message: "Error filtering restaurants" });
     }
   }
 }

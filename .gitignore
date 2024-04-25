@@ -183,3 +183,5 @@ uploads/restaurant_photos/carousel/*.jpg
 uploads/restaurant_photos/carousel/*.jpeg
 uploads/restaurant_photos/carousel/*.png
 uploads/dish_photos/*.jpg
+
+recommendations.json

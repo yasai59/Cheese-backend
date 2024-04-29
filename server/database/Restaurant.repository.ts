@@ -60,11 +60,52 @@ export default class RestaurantRepository implements IRestaurantRepository {
   }
 
   public async findByOwner(user: User): Promise<RestaurantModel[]> {
-    const query = "SELECT * FROM restaurant WHERE owner_id = ?";
+    const query = `SELECT r.*, 
+    (
+      SELECT JSON_ARRAYAGG(
+                  JSON_OBJECT(
+                      'id', d.id,
+                      'name', d.name,
+                      'tastes', (
+                          SELECT JSON_ARRAYAGG(
+                                      JSON_OBJECT(
+                                          'id', t.id,
+                                          'name', t.name
+                                      )
+                                  ) 
+                          FROM taste t 
+                          INNER JOIN dish_taste dt ON t.id = dt.taste_id 
+                          WHERE dt.dish_id = d.id
+                      ),
+                      'restrictions', IFNULL(
+                        (
+                          SELECT JSON_ARRAYAGG(
+                                      JSON_OBJECT(
+                                          'id', res.id,
+                                          'name', res.name
+                                      )
+                                  ) 
+                          FROM restriction res 
+                          INNER JOIN dish_restriction dr ON res.id = dr.restriction_id 
+                          WHERE dr.dish_id = d.id
+                      ),
+                      JSON_ARRAY()
+                    )
+                  )
+              ) 
+      FROM dish d 
+      WHERE d.restaurant_id = r.id
+    ) AS dishes
+    FROM restaurant r INNER JOIN dish d ON r.id = d.restaurant_id WHERE r.owner_id = ?`;
     try {
       const result = await connection.promise().query(query, [user.id]);
       const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];
-      return restaurants as RestaurantModel[];
+      return restaurants.map((restaurant) => {
+        restaurant.dishes = restaurant.dishes
+          ? JSON.parse(restaurant.dishes)
+          : [];
+        return restaurant as RestaurantModel;
+      });
     } catch (error) {
       console.log(error);
       throw new Error("Error finding restaurants by owner");

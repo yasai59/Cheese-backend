@@ -314,6 +314,7 @@ class RestaurantController {
       return;
     }
     try {
+      console.log(user.id);
       const restaurants = await restaurantRepository.findByOwner(user);
       res.status(200).json(restaurants);
     } catch (error) {

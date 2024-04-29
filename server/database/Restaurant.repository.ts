@@ -87,6 +87,24 @@ export default class RestaurantRepository implements IRestaurantRepository {
     user: User,
     restaurantId: number
   ): Promise<void> {
+    // test if the restaurant is already in their favourites, if so, remove it
+    const tQuery =
+      "SELECT * FROM favorite_restaurant WHERE user_id = ? AND restaurant_id = ?";
+    const result = await connection
+      .promise()
+      .query(tQuery, [user.id, restaurantId]);
+    const favorites: RowDataPacket[] = result[0] as RowDataPacket[];
+    if (favorites.length > 0) {
+      const queryDelete =
+        "DELETE FROM favorite_restaurant WHERE user_id = ? AND restaurant_id = ?";
+      try {
+        await connection.promise().query(queryDelete, [user.id, restaurantId]);
+        return;
+      } catch (error) {
+        throw new Error("Error deleting favorite restaurant");
+      }
+    }
+
     const query =
       "INSERT INTO favorite_restaurant (user_id, restaurant_id) VALUES (?, ?)";
     try {
@@ -259,20 +277,22 @@ export default class RestaurantRepository implements IRestaurantRepository {
     `;
 
     try {
-        const result = await connection.promise().query(query);
-        const restaurants: any[] = result[0] as any[];
-        
-        return restaurants.map((restaurant) => {
-            restaurant.carousel_photos = restaurant.carousel_photos ? restaurant.carousel_photos.split(',') : [];
-            restaurant.active_subscription = !!restaurant.active_subscription;
-            restaurant.dishes = restaurant.dishes ? JSON.parse(restaurant.dishes) : [];
-            return restaurant as RestaurantModel;
-        });
+      const result = await connection.promise().query(query);
+      const restaurants: any[] = result[0] as any[];
+
+      return restaurants.map((restaurant) => {
+        restaurant.carousel_photos = restaurant.carousel_photos
+          ? restaurant.carousel_photos.split(",")
+          : [];
+        restaurant.active_subscription = !!restaurant.active_subscription;
+        restaurant.dishes = restaurant.dishes
+          ? JSON.parse(restaurant.dishes)
+          : [];
+        return restaurant as RestaurantModel;
+      });
     } catch (error) {
-        console.log(error);
-        throw new Error("Error finding restaurants");
+      console.log(error);
+      throw new Error("Error finding restaurants");
     }
-}
-
-
+  }
 }

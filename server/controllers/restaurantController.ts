@@ -235,7 +235,7 @@ class RestaurantController {
       const favoriteRestaurants =
         await restaurantRepository.findFavoriteRestaurants(user);
       if (favoriteRestaurants.length === 0) {
-        res.status(404).json({ message: "No favorite restaurants found" });
+        res.status(200).json([]);
       }
       res.status(200).json(favoriteRestaurants);
     } catch (error) {

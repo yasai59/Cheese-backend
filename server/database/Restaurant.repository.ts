@@ -66,6 +66,9 @@ export default class RestaurantRepository implements IRestaurantRepository {
                   JSON_OBJECT(
                       'id', d.id,
                       'name', d.name,
+                      'price', d.price,
+                      'photo', d.photo,
+                      'description', d.description,
                       'tastes', (
                           SELECT JSON_ARRAYAGG(
                                       JSON_OBJECT(

@@ -4,6 +4,7 @@ import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import dishController from "../controllers/dishController";
+import { verifyDishProperty } from "../middlewares/verifyDishProperty";
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
 const storage = multer.diskStorage({
@@ -168,7 +169,11 @@ dishRouter.post(
  *       '500':
  *         description: Internal Server Error
  */
-dishRouter.put("/:dishId", [verifyJWT], dishController.updateDish);
+dishRouter.put(
+  "/:dishId",
+  [verifyJWT, verifyDishProperty],
+  dishController.updateDish
+);
 
 /**
  * @swagger
@@ -191,7 +196,11 @@ dishRouter.put("/:dishId", [verifyJWT], dishController.updateDish);
  *       '500':
  *         description: Internal Server Error
  */
-dishRouter.delete("/:dishId", [verifyJWT], dishController.deleteDish);
+dishRouter.delete(
+  "/:dishId",
+  [verifyJWT, verifyDishProperty],
+  dishController.deleteDish
+);
 
 /**
  * @swagger

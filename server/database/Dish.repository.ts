@@ -10,7 +10,10 @@ interface IDishRepository {
 }
 
 export default class DishRepository implements IDishRepository {
-  public async addDish(restaurantId: number, dish: DishModel): Promise<DishModel> {
+  public async addDish(
+    restaurantId: number,
+    dish: DishModel
+  ): Promise<DishModel> {
     const query =
       "INSERT INTO dish (restaurant_id, name, price, photo, description) VALUES (?, ?, ?, ?, ?)";
     try {
@@ -23,8 +26,12 @@ export default class DishRepository implements IDishRepository {
           dish.photo,
           dish.description,
         ]);
-      const dishes: RowDataPacket[] = result[0] as RowDataPacket[];
-      const dishSaved = dishes[0] as DishModel;
+
+      const dishSaved = {
+        ...dish,
+        id: (result[0] as RowDataPacket).insertId,
+      };
+
       return dishSaved;
     } catch (error) {
       console.log(error);
@@ -105,7 +112,7 @@ export default class DishRepository implements IDishRepository {
       dishes.forEach((dish) => {
         dish.tastes = JSON.parse(dish.tastes);
         dish.restrictions = JSON.parse(dish.restrictions);
-      })
+      });
 
       return dishes as DishModel[];
     } catch (error) {

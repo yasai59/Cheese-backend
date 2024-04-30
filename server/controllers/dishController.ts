@@ -2,6 +2,11 @@ import type { Request, Response } from "express";
 import DishRepository from "../database/Dish.repository";
 import type DishModel from "../models/Dish.model";
 import path from "path";
+import TasteRepository from "../database/Taste.repository";
+import RestrictionRepository from "../database/Restriction.repository";
+
+const tasteRepository = new TasteRepository();
+const restrictionRepository = new RestrictionRepository();
 
 const dir = path.dirname(new URL(import.meta.url).pathname);
 const dishRepository = new DishRepository();
@@ -19,14 +24,30 @@ class DishController {
 
   async createDish(req: any, res: Response) {
     const restaurantId = Number(req.params.restaurantId);
-    const dish = req.body as DishModel;
+    let dish = req.body as DishModel;
+
+    dish.tastes = JSON.parse(dish.tastes);
+    dish.restrictions = JSON.parse(dish.restrictions);
+
     try {
       const dishSaved = await dishRepository.addDish(restaurantId, {
         ...dish,
         photo: req.photoName,
       });
+
+      tasteRepository.addTastesToDish(
+        dishSaved.id,
+        dish.tastes.map((t: any) => t.id)
+      );
+
+      restrictionRepository.addRestrictionsToDish(
+        dishSaved.id,
+        dish.restrictions.map((r: any) => r.id)
+      );
+
       res.status(201).json(dishSaved);
     } catch (error) {
+      console.log("a", error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   }

@@ -289,7 +289,7 @@ restaurantRouter.put(
  *         description: Internal Server Error
  */
 restaurantRouter.post(
-  "/photo/profile-picture",
+  "/photo/profile-picture/:restaurantId",
   [verifyJWT, verifyProperty, uploadProfilePicture.single("photo")],
   restaurantController.uploadProfilePicture
 );

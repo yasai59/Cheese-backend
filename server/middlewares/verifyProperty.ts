@@ -11,6 +11,7 @@ export const verifyProperty = async (
   next: NextFunction
 ) => {
   let restaurantId = Number(req.params.restaurantId);
+
   if (isNaN(restaurantId) || !restaurantId) {
     restaurantId = req.body.id;
   }

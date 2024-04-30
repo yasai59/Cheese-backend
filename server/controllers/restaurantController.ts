@@ -70,7 +70,7 @@ class RestaurantController {
   async uploadProfilePicture(req: PhotoRequest, res: Response) {
     try {
       const photo = req.photoName;
-      let restaurant = req.body as RestaurantModel;
+      let restaurant = { id: Number(req.params.restaurantId) };
       if (!photo) {
         return res.status(400).json({ message: "No file uploaded" });
       }
@@ -99,7 +99,17 @@ class RestaurantController {
         dbRes.id as number
       );
 
-      dbRes.dishes = dishes;
+      dbRes.dishes = dishes.map((dish) => {
+        return {
+          id: dish.dish_id,
+          name: dish.dish_name,
+          price: dish.dish_price,
+          description: dish.dish_description,
+          photo: dish.dish_photo,
+          tastes: dish.tastes,
+          restrictions: dish.restrictions,
+        };
+      });
 
       return res.status(201).json({
         message: "Profile picture uploaded successfully",

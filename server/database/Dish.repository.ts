@@ -40,18 +40,29 @@ export default class DishRepository implements IDishRepository {
   }
 
   public async updateDish(dish: DishModel): Promise<DishModel> {
-    const query =
-      "UPDATE dish SET name = ?, price = ?, photo = ?, description = ? WHERE id = ?";
+    let query =
+      "UPDATE dish SET name = ?, price = ?, description = ? WHERE id = ?";
+
+    if (dish.photo) {
+      query =
+        "UPDATE dish SET name = ?, price = ?, photo = ?, description = ? WHERE id = ?";
+    }
     try {
-      await connection
-        .promise()
-        .query(query, [
-          dish.name,
-          dish.price,
-          dish.photo,
-          dish.description,
-          dish.id,
-        ]);
+      if (dish.photo) {
+        await connection
+          .promise()
+          .query(query, [
+            dish.name,
+            dish.price,
+            dish.photo,
+            dish.description,
+            dish.id,
+          ]);
+      } else {
+        await connection
+          .promise()
+          .query(query, [dish.name, dish.price, dish.description, dish.id]);
+      }
       return dish;
     } catch (error) {
       console.log(error);

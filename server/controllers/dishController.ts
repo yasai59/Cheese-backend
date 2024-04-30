@@ -47,15 +47,29 @@ class DishController {
 
       res.status(201).json(dishSaved);
     } catch (error) {
-      console.log("a", error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   }
 
-  async updateDish(req: Request, res: Response) {
-    const dish = req.body as DishModel;
+  async updateDish(req: any, res: Response) {
+    let dish = req.body as DishModel;
+    if (req.photoName) {
+      dish.photo = req.photoName;
+    }
+    const tastes = JSON.parse(dish.tastes);
+    const restrictions = JSON.parse(dish.restrictions);
+
+    console.log(tastes, restrictions);
     try {
       const dishUpdated = await dishRepository.updateDish(dish);
+      tasteRepository.addTastesToDish(
+        dish.id,
+        tastes.map((t: any) => t.id)
+      );
+      restrictionRepository.addRestrictionsToDish(
+        dish.id,
+        restrictions.map((r: any) => r.id)
+      );
       res.status(200).json(dishUpdated);
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });

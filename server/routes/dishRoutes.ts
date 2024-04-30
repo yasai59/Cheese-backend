@@ -171,7 +171,7 @@ dishRouter.post(
  */
 dishRouter.put(
   "/:dishId",
-  [verifyJWT, verifyDishProperty],
+  [verifyJWT, verifyDishProperty, upload.single("photo")],
   dishController.updateDish
 );
 

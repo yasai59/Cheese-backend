@@ -373,8 +373,6 @@ class UserController {
     // check if the user exists
     const { email, name, photo, userId, idToken, web = false } = req.body;
 
-    console.log({ email, name, photo, userId, idToken, web });
-
     // verify google token
     if (!web) {
       try {

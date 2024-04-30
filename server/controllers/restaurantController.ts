@@ -374,7 +374,6 @@ class RestaurantController {
       );
       defRestaurants = await recommend(orderedRestaurants, user);
 
-      console.log(defRestaurants);
       res.status(200).json({ recomendations: defRestaurants });
     } catch (error) {
       console.log(error);

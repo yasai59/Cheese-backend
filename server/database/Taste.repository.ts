@@ -68,8 +68,12 @@ export default class TasteRepository implements ITasteRepository {
     }
   }
 
-  public async addTastesToDish(dishId: number, tastes: number[]): Promise<TasteModel[]> {
+  public async addTastesToDish(
+    dishId: number,
+    tastes: number[]
+  ): Promise<TasteModel[]> {
     const query = "INSERT INTO dish_taste (dish_id, taste_id) VALUES (?, ?)";
+
     try {
       connection
         .promise()
@@ -82,7 +86,7 @@ export default class TasteRepository implements ITasteRepository {
     } catch (error) {
       console.log(error);
       throw new Error("Error adding tastes to dish");
-    }  
+    }
   }
 
   public async createTaste(taste: TasteModel): Promise<TasteModel> {

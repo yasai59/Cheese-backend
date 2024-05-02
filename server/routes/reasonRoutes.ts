@@ -81,6 +81,6 @@ reasonRouter.post("/", verifyJWT, reasonController.createReason);
  *       '500':
  *         description: Internal Server Error
  */
-reasonRouter.get("/getAll", [verifyJWT, verifyRole(3)], reasonController.getAllReason);
+reasonRouter.get("/getAll", [verifyJWT], reasonController.getAllReason);
 
 export default reasonRouter;

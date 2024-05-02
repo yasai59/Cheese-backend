@@ -99,7 +99,7 @@ export default class RestaurantRepository implements IRestaurantRepository {
       FROM dish d 
       WHERE d.restaurant_id = r.id
     ) AS dishes
-    FROM restaurant r INNER JOIN dish d ON r.id = d.restaurant_id WHERE r.owner_id = ?`;
+    FROM restaurant r WHERE r.owner_id = ?`;
     try {
       const result = await connection.promise().query(query, [user.id]);
       const restaurants: RowDataPacket[] = result[0] as RowDataPacket[];

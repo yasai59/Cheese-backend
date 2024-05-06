@@ -401,7 +401,7 @@ class UserController {
 
     let user: UserModel | undefined = undefined;
     try {
-      user = await userRepository.findByEmail(email);
+      user = await userRepository.findByEmailObjective(email);
     } catch (error) {
       console.log(error);
     }

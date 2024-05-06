@@ -11,12 +11,24 @@ interface IUserRepository {
   delete(id: number): Promise<void>;
   getAllInfoUserFromOtherTables(user: UserModel): Promise<UserModel>;
   findAll(): Promise<UserModel[]>;
-  
 }
 
 export default class UserRepository implements IUserRepository {
   public async findByEmail(email: string): Promise<UserModel> {
     const query = "SELECT * FROM user WHERE email = ? AND active = 1";
+    try {
+      const result = await connection.promise().query(query, [email]);
+      const users: RowDataPacket[] = result[0] as RowDataPacket[];
+      const user = users[0] as UserModel;
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error finding user by email");
+    }
+  }
+
+  public async findByEmailObjective(email: string): Promise<UserModel> {
+    const query = "SELECT * FROM user WHERE email = ?";
     try {
       const result = await connection.promise().query(query, [email]);
       const users: RowDataPacket[] = result[0] as RowDataPacket[];

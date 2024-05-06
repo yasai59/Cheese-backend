@@ -402,6 +402,11 @@ class UserController {
     let user: UserModel | undefined = undefined;
     try {
       user = await userRepository.findByEmailObjective(email);
+      if (!user.active) {
+        return res.status(400).json({
+          message: "User is not active",
+        });
+      }
     } catch (error) {
       console.log(error);
     }

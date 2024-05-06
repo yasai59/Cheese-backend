@@ -402,7 +402,9 @@ class UserController {
     let user: UserModel | undefined = undefined;
     try {
       user = await userRepository.findByEmail(email);
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
     if (user != undefined) {
       // create the token
       const token: string = jwt.sign(

@@ -12,7 +12,7 @@ describe("Test login", () => {
     try {
       const res = await axios.post("/api/user/login", {
         username: "alexvidalcasado@gmail.com",
-        password: "1234",
+        password: "123456789",
       });
       expect(res.status).toEqual(200);
     } catch (e) {

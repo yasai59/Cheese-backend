@@ -217,7 +217,7 @@ userRouter.get("/myUser", [verifyJWT], userController.myUser);
 userRouter.post(
   "/",
   [
-    check("username", "the user is required").notEmpty(),
+    check("username", "the username is required").notEmpty(),
     check("password", "the password is required").notEmpty(),
     check("email", "the email is required").isEmail(),
     validarCampos,

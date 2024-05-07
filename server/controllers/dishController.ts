@@ -26,10 +26,13 @@ class DishController {
     const restaurantId = Number(req.params.restaurantId);
     let dish = req.body as DishModel;
 
-    console.log(dish);
-
-    dish.tastes = JSON.parse(dish.tastes || "[]");
-    dish.restrictions = JSON.parse(dish.restrictions || "[]");
+    try {
+      dish.tastes = JSON.parse(dish.tastes || "[]");
+      dish.restrictions = JSON.parse(dish.restrictions || "[]");
+    } catch (e) {
+      dish.tastes = [];
+      dish.restrictions = [];
+    }
 
     try {
       const dishSaved = await dishRepository.addDish(restaurantId, {

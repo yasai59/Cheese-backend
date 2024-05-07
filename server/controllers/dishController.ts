@@ -26,8 +26,10 @@ class DishController {
     const restaurantId = Number(req.params.restaurantId);
     let dish = req.body as DishModel;
 
-    dish.tastes = dish.tastes ? JSON.parse(dish.tastes) : [];
-    dish.restrictions = dish.restrictions ? JSON.parse(dish.restrictions) : [];
+    console.log(dish);
+
+    dish.tastes = JSON.parse(dish.tastes || "[]");
+    dish.restrictions = JSON.parse(dish.restrictions || "[]");
 
     try {
       const dishSaved = await dishRepository.addDish(restaurantId, {
@@ -56,8 +58,8 @@ class DishController {
     if (req.photoName) {
       dish.photo = req.photoName;
     }
-    const tastes = dish.tastes ? JSON.parse(dish.tastes) : [];
-    const restrictions = dish.restrictions ? JSON.parse(dish.restrictions) : [];
+    const tastes = JSON.parse(dish.tastes || "[]");
+    const restrictions = JSON.parse(dish.restrictions || "[]");
 
     console.log(tastes, restrictions);
     try {

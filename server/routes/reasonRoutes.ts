@@ -8,7 +8,7 @@ const reasonRouter: Router = express.Router();
 /**
  * @swagger
  * tags:
- *   name: Report
+ *   name: Reports
  *   description: API endpoints for managing reports
  */
 

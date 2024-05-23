@@ -7,7 +7,7 @@ const reportRouter: Router = express.Router();
 /**
  * @swagger
  * tags:
- *   name: Report
+ *   name: Reports
  *   description: API endpoints for managing reports
  */
 
@@ -101,7 +101,11 @@ reportRouter.post("/:restaurantId", [verifyJWT], reportController.createReport);
  *       '500':
  *         description: Internal Server Error
  */
-reportRouter.get("/getReports/:restaurantId", [verifyJWT, verifyRole(3)], reportController.findRestaurantReports);
+reportRouter.get(
+  "/getReports/:restaurantId",
+  [verifyJWT, verifyRole(3)],
+  reportController.findRestaurantReports
+);
 
 /**
  * @swagger
@@ -121,8 +125,10 @@ reportRouter.get("/getReports/:restaurantId", [verifyJWT, verifyRole(3)], report
  *       '500':
  *         description: Internal Server Error
  */
-reportRouter.get("/getAll", [verifyJWT, verifyRole(3)], reportController.findAllReports);
-
-
+reportRouter.get(
+  "/getAll",
+  [verifyJWT, verifyRole(3)],
+  reportController.findAllReports
+);
 
 export default reportRouter;

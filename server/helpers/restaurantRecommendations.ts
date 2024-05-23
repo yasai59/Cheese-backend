@@ -4,6 +4,7 @@ import TasteRepository from "../database/Taste.repository";
 import DishRepository from "../database/Dish.repository";
 import RestrictionRepository from "../database/Restriction.repository";
 import fs from "fs";
+import type RestrictionModel from "../models/Restriction.model";
 
 const tasteRepository = new TasteRepository();
 const restrictionRepository = new RestrictionRepository();
@@ -26,8 +27,19 @@ export async function filterRestaurants(
     const canEatPercent: number = restaurant.dishes.reduce(
       (acc: any, dish: any) => {
         const restrictions = dish.restrictions || [];
-        const canEat = !restrictions.some((restriction: any) => {
-          return userRestrictions.includes(restriction);
+        let canEat = true;
+
+        canEat = !restrictions.some((restriction: RestrictionModel) => {
+          // if the restriction id is < 3 it has to be equal, if not it has to be included
+          if (restriction.id <= 3) {
+            return !userRestrictions.find(
+              (userRestriction) => userRestriction.id >= restriction.id
+            );
+          }
+
+          return userRestrictions.find(
+            (userRestriction) => userRestriction.id === restriction.id
+          );
         });
 
         return acc + (canEat ? eachOne : 0);

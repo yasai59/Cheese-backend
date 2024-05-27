@@ -101,7 +101,7 @@ export default class UserRepository implements IUserRepository {
 
     if (!user.password) {
       query =
-        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, photo = ?, active = ? WHERE id = ?";
+        "UPDATE user SET username = ?, email = ?, role_id = ?, lot_number = ?, active = ? WHERE id = ?";
     }
     try {
       let campos = [

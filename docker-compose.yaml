@@ -3,7 +3,7 @@ services:
     build:
       context: .
     environment:
-      PORT: ${PORT}
+      PORT: 6969
       RESEND_API_KEY: ${RESEND_API_KEY}
       JWT_SECRET: ${JWT_SECRET}
       DB_HOST: ${DB_HOST}
@@ -13,4 +13,4 @@ services:
       DB_NAME: ${DB_NAME}
       CLIENT_ID_APP: ${CLIENT_ID_APP}
     ports:
-      - ${PORT}:${PORT}
+      - 6969:6969

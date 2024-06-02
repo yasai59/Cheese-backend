@@ -1,6 +1,12 @@
 # generate a dockerfile to build this bun project
-FROM oven/bun:1 as base
+FROM oven/bun:1
 WORKDIR /usr/src/app
+
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+COPY package*.json ./
+
+# Install app dependencies
+RUN bun install
 
 COPY . .
 
@@ -15,5 +21,7 @@ ENV DB_NAME=${DB_NAME}
 ENV CLIENT_ID_APP=${CLIENT_ID_APP}
 
 RUN bun install
+
+EXPOSE ${PORT}
 
 CMD ["bun", "run", "index.ts"]

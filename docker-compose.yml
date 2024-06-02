@@ -1,0 +1,16 @@
+services:
+  cheese:
+    build:
+      context: .
+    environment:
+      PORT: ${PORT}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      DB_HOST: ${DB_HOST}
+      DB_POST: ${DB_POST}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      CLIENT_ID_APP: ${CLIENT_ID_APP}
+    ports:
+      - ${PORT}:${PORT}

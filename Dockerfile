@@ -12,4 +12,6 @@ COPY . .
 
 RUN bun install
 
+EXPOSE 6969
+
 CMD ["bun", "run", "index.ts"]

@@ -13,4 +13,4 @@ services:
       DB_NAME: ${DB_NAME}
       CLIENT_ID_APP: ${CLIENT_ID_APP}
     ports:
-      - "6969"
+      - 6969:6969
